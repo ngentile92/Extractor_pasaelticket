@@ -139,12 +139,23 @@ Extractor_pasaelticket/
 
 Key environment variables in `.env`:
 
-- `SECRET_KEY`: Django secret key
-- `DEBUG`: Debug mode (True/False)
+- `SECRET_KEY`: Django secret key (generate a strong one for production)
+- `DEBUG`: Debug mode (True/False) - **Must be False in production**
 - `OPENAI_API_KEY`: OpenAI API key for Llamaindex (required)
 - `LLAMAINDEX_MODEL`: Model to use (default: gpt-3.5-turbo)
 - `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
 - `CORS_ALLOW_ALL_ORIGINS`: Allow CORS from all origins (True/False)
+
+### Production Deployment
+
+For production deployment, ensure you:
+- Set `DEBUG=False`
+- Use a strong, random `SECRET_KEY` (50+ characters)
+- Configure `ALLOWED_HOSTS` with your domain
+- Enable HTTPS and set security headers
+- Use a production-grade database (PostgreSQL recommended)
+- Set up proper logging and monitoring
+- Configure static file serving with WhiteNoise or a CDN
 
 ## Development
 
