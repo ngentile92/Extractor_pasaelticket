@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.utils import timezone
 from django.core.files.storage import default_storage
+from django.conf import settings
+import logging
 
 from .models import Invoice, InvoiceItem
 from .serializers import (
@@ -12,6 +14,8 @@ from .serializers import (
     InvoiceItemSerializer
 )
 from .services import InvoiceExtractionService
+
+logger = logging.getLogger(__name__)
 
 
 class InvoiceViewSet(viewsets.ModelViewSet):
@@ -138,33 +142,53 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 )
             else:
                 # Processing failed
+                error_detail = result.get('error', 'Unknown error')
                 invoice.status = 'failed'
-                invoice.error_message = result.get('error', 'Unknown error')
+                invoice.error_message = error_detail
                 invoice.save()
                 
+                # Log the error for debugging
+                logger.error(f"Invoice {invoice.id} processing failed: {error_detail}")
+                
+                # Don't expose internal error details in production
+                error_response = {
+                    'id': invoice.id,
+                    'status': 'failed',
+                    'message': 'Failed to process invoice'
+                }
+                
+                # Only include error details in debug mode
+                if settings.DEBUG:
+                    error_response['error'] = error_detail
+                
                 return Response(
-                    {
-                        'id': invoice.id,
-                        'status': 'failed',
-                        'message': 'Failed to process invoice',
-                        'error': result.get('error')
-                    },
+                    error_response,
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
                 
         except Exception as e:
             # Handle unexpected errors
+            error_detail = str(e)
             invoice.status = 'failed'
-            invoice.error_message = str(e)
+            invoice.error_message = error_detail
             invoice.save()
             
+            # Log the error for debugging
+            logger.exception(f"Unexpected error processing invoice {invoice.id}")
+            
+            # Don't expose internal error details in production
+            error_response = {
+                'id': invoice.id,
+                'status': 'failed',
+                'message': 'An error occurred during processing'
+            }
+            
+            # Only include error details in debug mode
+            if settings.DEBUG:
+                error_response['error'] = error_detail
+            
             return Response(
-                {
-                    'id': invoice.id,
-                    'status': 'failed',
-                    'message': 'An error occurred during processing',
-                    'error': str(e)
-                },
+                error_response,
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
@@ -212,24 +236,45 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                     }
                 )
             else:
+                error_detail = result.get('error')
                 invoice.status = 'failed'
-                invoice.error_message = result.get('error')
+                invoice.error_message = error_detail
                 invoice.save()
                 
+                # Log the error for debugging
+                logger.error(f"Invoice {invoice.id} reprocessing failed: {error_detail}")
+                
+                # Don't expose internal error details in production
+                error_response = {
+                    'error': 'Failed to reprocess invoice'
+                }
+                
+                # Only include error details in debug mode
+                if settings.DEBUG:
+                    error_response['details'] = error_detail
+                
                 return Response(
-                    {
-                        'error': 'Failed to reprocess invoice',
-                        'details': result.get('error')
-                    },
+                    error_response,
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
                 
         except Exception as e:
+            error_detail = str(e)
             invoice.status = 'failed'
-            invoice.error_message = str(e)
+            invoice.error_message = error_detail
             invoice.save()
             
+            # Log the error for debugging
+            logger.exception(f"Unexpected error reprocessing invoice {invoice.id}")
+            
+            # Don't expose internal error details in production
+            error_response = {'error': 'An error occurred during reprocessing'}
+            
+            # Only include error details in debug mode
+            if settings.DEBUG:
+                error_response['details'] = error_detail
+            
             return Response(
-                {'error': str(e)},
+                error_response,
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
