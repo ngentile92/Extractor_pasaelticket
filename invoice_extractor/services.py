@@ -6,9 +6,13 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
 
-from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
-from llama_index.core.llms import OpenAI
-from llama_index.core import Settings
+try:
+    from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
+    from llama_index.core.llms import OpenAI
+    from llama_index.core import Settings
+    LLAMAINDEX_AVAILABLE = True
+except ImportError:
+    LLAMAINDEX_AVAILABLE = False
 
 
 class InvoiceExtractionService:
@@ -16,6 +20,9 @@ class InvoiceExtractionService:
     
     def __init__(self):
         """Initialize Llamaindex with configuration"""
+        if not LLAMAINDEX_AVAILABLE:
+            return
+        
         # Configure the LLM
         api_key = os.getenv('OPENAI_API_KEY')
         if api_key:
@@ -34,6 +41,12 @@ class InvoiceExtractionService:
         Returns:
             Dictionary containing extracted invoice data
         """
+        if not LLAMAINDEX_AVAILABLE:
+            return {
+                'success': False,
+                'error': 'Llamaindex is not installed. Please install it using: pip install llama-index'
+            }
+        
         try:
             # Load the document
             documents = SimpleDirectoryReader(
