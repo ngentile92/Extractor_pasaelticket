@@ -8,8 +8,8 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = InvoiceItem
         fields = [
-            'id', 'description', 'quantity', 'unit_price', 
-            'total_price', 'tax_rate', 'product_code', 'unit_of_measure'
+            'id', 'codigo', 'descripcion', 'cantidad', 'precio_unitario', 
+            'subtotal', 'unidad_medida', 'order'
         ]
 
 
@@ -22,13 +22,18 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = Invoice
         fields = [
             'id', 'document', 'original_filename', 'status',
-            'uploaded_at', 'processed_at', 
-            'invoice_number', 'invoice_date',
-            'vendor_name', 'vendor_cuit', 'vendor_address',
-            'customer_name', 'customer_cuit', 'customer_address',
-            'subtotal', 'tax_amount', 'total_amount', 'currency',
-            'payment_terms', 'notes', 'raw_extraction',
-            'error_message', 'items'
+            'uploaded_at', 'processed_at', 'extraction_time', 'schema_type',
+            'tipo_comprobante', 'codigo_comprobante', 'numero_comprobante', 
+            'punto_venta', 'fecha_emision', 'cae', 'fecha_vencimiento_cae',
+            'moneda', 'condicion_venta',
+            'empresa_razon_social', 'empresa_cuit', 'empresa_condicion_iva',
+            'empresa_domicilio', 'empresa_ingresos_brutos', 'empresa_provincia',
+            'cliente_nombre', 'cliente_cuit', 'cliente_condicion_iva',
+            'cliente_domicilio', 'cliente_provincia',
+            'subtotal_gravado', 'total_iva', 'total_percepciones', 
+            'total_retenciones', 'importe_total', 'descuentos',
+            'items_count', 'diferencia_matematica', 'validation_score',
+            'raw_extraction', 'error_message', 'items'
         ]
         read_only_fields = ['id', 'uploaded_at', 'processed_at', 'status']
 

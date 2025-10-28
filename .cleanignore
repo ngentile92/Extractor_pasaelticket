@@ -1,0 +1,24 @@
+# 🧹 Guía de Limpieza Futura
+# Este archivo documenta qué NO debe mantenerse en el repo
+
+# ❌ NO CREAR:
+# - Archivos PLAN_*.md (los planes se ejecutan y se eliminan)
+# - Archivos RESUMEN_*.md (mantener solo README.md actualizado)
+# - Archivos PROGRESO_*.md (usar Git commits en su lugar)
+# - Duplicados de código de producción en la raíz
+# - Scripts de test individuales (consolidar en test_*.py principales)
+# - Directorios test_* temporales (agregar a .gitignore)
+
+# ✅ MANTENER:
+# - README.md (guía principal, siempre actualizado)
+# - CONTRIBUTING.md (guías de contribución)
+# - Documentos de arquitectura (ARQUITECTURA_*, SISTEMA_*)
+# - Documentos de uso (MODULAR_EXTRACTION, CONFIGURACION_*)
+# - Código de producción en invoice_extractor/
+# - Tests unitarios consolidados
+# - Scripts útiles (setup, reset, ejemplos)
+
+# 📝 REGLA DE ORO:
+# Si un documento describe algo YA IMPLEMENTADO, el README debe actualizarse
+# y el documento temporal debe eliminarse.
+

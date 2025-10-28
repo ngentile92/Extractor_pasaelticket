@@ -6,41 +6,65 @@ class InvoiceItemInline(admin.TabularInline):
     """Inline admin for invoice items"""
     model = InvoiceItem
     extra = 0
-    fields = ['description', 'quantity', 'unit_price', 'total_price', 'tax_rate']
+    fields = ['codigo', 'descripcion', 'cantidad', 'unidad_medida', 'precio_unitario', 'subtotal', 'order']
+    readonly_fields = ['order']
 
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
-    """Admin interface for Invoice model"""
+    """Admin interface for Invoice model (Comprobantes)"""
     list_display = [
-        'id', 'invoice_number', 'vendor_name', 'total_amount', 
-        'status', 'uploaded_at', 'processed_at'
+        'id', 'numero_comprobante', 'tipo_comprobante', 'empresa_razon_social', 
+        'importe_total', 'status', 'uploaded_at', 'processed_at'
     ]
-    list_filter = ['status', 'uploaded_at', 'currency']
+    list_filter = ['status', 'uploaded_at', 'tipo_comprobante', 'schema_type']
     search_fields = [
-        'invoice_number', 'vendor_name', 'vendor_cuit',
-        'customer_name', 'customer_cuit'
+        'numero_comprobante', 'empresa_razon_social', 'empresa_cuit',
+        'cliente_nombre', 'cliente_cuit', 'cae'
     ]
-    readonly_fields = ['uploaded_at', 'processed_at', 'raw_extraction']
+    readonly_fields = [
+        'uploaded_at', 'processed_at', 'extraction_time', 
+        'raw_extraction', 'has_complete_extraction'
+    ]
     
     fieldsets = (
         ('Document Information', {
-            'fields': ('document', 'original_filename', 'status', 'uploaded_at', 'processed_at')
+            'fields': (
+                'document', 'original_filename', 'status', 
+                'uploaded_at', 'processed_at', 'extraction_time', 'schema_type'
+            )
         }),
-        ('Invoice Details', {
-            'fields': ('invoice_number', 'invoice_date', 'currency')
+        ('Comprobante Details', {
+            'fields': (
+                'tipo_comprobante', 'codigo_comprobante', 'numero_comprobante', 
+                'punto_venta', 'fecha_emision', 'cae', 'fecha_vencimiento_cae',
+                'moneda', 'condicion_venta'
+            )
         }),
-        ('Vendor Information', {
-            'fields': ('vendor_name', 'vendor_cuit', 'vendor_address')
+        ('Empresa/Vendor Information', {
+            'fields': (
+                'empresa_razon_social', 'empresa_cuit', 'empresa_condicion_iva',
+                'empresa_domicilio', 'empresa_provincia', 'empresa_ingresos_brutos'
+            )
         }),
-        ('Customer Information', {
-            'fields': ('customer_name', 'customer_cuit', 'customer_address')
+        ('Cliente/Customer Information', {
+            'fields': (
+                'cliente_nombre', 'cliente_cuit', 'cliente_condicion_iva',
+                'cliente_domicilio', 'cliente_provincia'
+            )
         }),
         ('Financial Information', {
-            'fields': ('subtotal', 'tax_amount', 'total_amount', 'payment_terms')
+            'fields': (
+                'subtotal_gravado', 'total_iva', 'total_percepciones', 
+                'total_retenciones', 'descuentos', 'importe_total'
+            )
         }),
-        ('Additional Information', {
-            'fields': ('notes', 'error_message', 'raw_extraction'),
+        ('Calculations & Validation', {
+            'fields': ('items_count', 'diferencia_matematica', 'validation_score'),
+            'classes': ('collapse',)
+        }),
+        ('Raw Data', {
+            'fields': ('error_message', 'raw_extraction', 'has_complete_extraction'),
             'classes': ('collapse',)
         }),
     )
@@ -52,8 +76,9 @@ class InvoiceAdmin(admin.ModelAdmin):
 class InvoiceItemAdmin(admin.ModelAdmin):
     """Admin interface for InvoiceItem model"""
     list_display = [
-        'id', 'invoice', 'description', 'quantity', 
-        'unit_price', 'total_price', 'tax_rate'
+        'id', 'invoice', 'codigo', 'descripcion', 'cantidad', 
+        'unidad_medida', 'precio_unitario', 'subtotal', 'order'
     ]
-    list_filter = ['invoice__status']
-    search_fields = ['description', 'product_code', 'invoice__invoice_number']
+    list_filter = ['invoice__status', 'unidad_medida']
+    search_fields = ['descripcion', 'codigo', 'invoice__numero_comprobante']
+    ordering = ['invoice', 'order']
