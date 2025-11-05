@@ -452,6 +452,135 @@ def get_validation_errors(extracted_data: Dict[str, Any]) -> list:
 
 
 # =============================================================================
+# TRANSFORMACIÓN A FORMATO LEGACY (estructura original)
+# =============================================================================
+
+def transform_to_legacy_format(processed_result: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    🔄 Transformar resultado procesado a formato legacy (estructura original)
+    
+    La estructura legacy espera:
+    {
+        "items": [...],
+        "partes": {...},
+        "documento": {...},
+        "fiscalidad": {...},
+        "metadata": {...}  // opcional: validation, processing, extraction
+    }
+    
+    Args:
+        processed_result: Resultado del post-procesamiento con estructura:
+            {
+                "raw_data": {...},
+                "processed_data": {...},
+                "validation_result": {...},
+                "processing_metadata": {...},
+                "extraction_metadata": {...}
+            }
+    
+    Returns:
+        Dict con estructura legacy + metadata opcional
+    """
+    processed_data = processed_result.get("processed_data", {})
+    validation_result = processed_result.get("validation_result", {})
+    processing_metadata = processed_result.get("processing_metadata", {})
+    extraction_metadata = processed_result.get("extraction_metadata", {})
+    
+    # Construir estructura legacy
+    legacy_format = {}
+    
+    # 1. ITEMS - Directo desde processed_data
+    if "items" in processed_data:
+        legacy_format["items"] = processed_data["items"]
+    
+    # 2. PARTES - Directo desde processed_data
+    if "partes" in processed_data:
+        legacy_format["partes"] = processed_data["partes"]
+    
+    # 3. DOCUMENTO - Directo desde processed_data
+    if "documento" in processed_data:
+        legacy_format["documento"] = processed_data["documento"]
+    
+    # 4. FISCALIDAD - Transformar estructura de impuestos
+    if "fiscalidad" in processed_data:
+        fiscalidad = processed_data["fiscalidad"].copy()
+        
+        # Transformar estructura de impuestos
+        if "impuestos" in fiscalidad:
+            impuestos = fiscalidad["impuestos"].copy()
+            
+            # Convertir iva_21, iva_105, etc. a estructura anidada {"21": valor, "105": valor}
+            iva_nested = {}
+            if "iva_21" in impuestos and impuestos["iva_21"]:
+                iva_nested["21"] = impuestos.pop("iva_21")
+            if "iva_105" in impuestos and impuestos["iva_105"]:
+                iva_nested["105"] = impuestos.pop("iva_105")
+            if "iva_27" in impuestos and impuestos["iva_27"]:
+                iva_nested["27"] = impuestos.pop("iva_27")
+            if "iva_5" in impuestos and impuestos["iva_5"]:
+                iva_nested["5"] = impuestos.pop("iva_5")
+            if "iva_25" in impuestos and impuestos["iva_25"]:
+                iva_nested["25"] = impuestos.pop("iva_25")
+            
+            # Solo agregar 'iva' si hay valores
+            if iva_nested:
+                impuestos["iva"] = iva_nested
+            
+            fiscalidad["impuestos"] = impuestos
+        
+        # Asegurar que totales tiene 'descuentos'
+        if "totales" in fiscalidad and "descuentos" not in fiscalidad["totales"]:
+            fiscalidad["totales"]["descuentos"] = 0
+        
+        # Asegurar que calculos tiene 'items_count' y 'items_subtotal_total'
+        if "calculos" in fiscalidad:
+            if "items_count" not in fiscalidad["calculos"] and "items" in processed_data:
+                fiscalidad["calculos"]["items_count"] = len(processed_data["items"])
+            if "items_subtotal_total" not in fiscalidad["calculos"] and "items" in processed_data:
+                items_total = sum(item.get("subtotal", 0) for item in processed_data["items"])
+                fiscalidad["calculos"]["items_subtotal_total"] = items_total
+        
+        legacy_format["fiscalidad"] = fiscalidad
+    
+    # 5. METADATA (opcional) - Agregar información de validación, procesamiento, extracción
+    legacy_format["metadata"] = {
+        "validation": {
+            "validation_score": validation_result.get("validation_score", 0.0),
+            "confidence_level": validation_result.get("confidence_level", "unknown"),
+            "has_validation_errors": validation_result.get("has_validation_errors", False),
+            "requires_review": validation_result.get("requires_review", False),
+            "errors_count": len(validation_result.get("validation_errors", [])),
+            "warnings_count": len(validation_result.get("validation_warnings", [])),
+            "alerts_count": len(validation_result.get("alerts", []))
+        },
+        "processing": {
+            "processing_time": processing_metadata.get("processing_time", 0),
+            "processing_timestamp": processing_metadata.get("processing_timestamp"),
+            "pipeline_version": processing_metadata.get("pipeline_version"),
+            "phases_executed": processing_metadata.get("phases_executed", [])
+        },
+        "extraction": {
+            "extraction_time": extraction_metadata.get("extraction_time", 0),
+            "extraction_method": extraction_metadata.get("extractor", "llamaextract"),
+            "schema_type": extraction_metadata.get("schema_type", "completo")
+        }
+    }
+    
+    # Agregar información de Gemini retry si está disponible
+    gemini_retry = processing_metadata.get("gemini_retry", {})
+    if gemini_retry.get("was_retried"):
+        legacy_format["metadata"]["gemini_retry"] = {
+            "used": True,
+            "first_score": gemini_retry.get("first_score", 0),
+            "second_score": gemini_retry.get("second_score", 0),
+            "improvement": gemini_retry.get("improvement", 0),
+            "method_used": gemini_retry.get("method_used", "llamaextract")
+        }
+    
+    return legacy_format
+
+
+# =============================================================================
 # CLASE PARA PROCESAMIENTO POR LOTES
 # =============================================================================
 

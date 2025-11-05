@@ -188,6 +188,44 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 validation_result = post_processing_result['validation_result']
                 processing_metadata = post_processing_result['processing_metadata']
                 
+                # Construir respuesta en formato legacy (estructura nativa ya es correcta desde schemas)
+                legacy_format = {
+                    **processed_data,  # items, partes, documento, fiscalidad (ya en formato correcto)
+                    'metadata': {
+                        'validation': {
+                            'validation_score': validation_result.get('validation_score', 0.0),
+                            'confidence_level': validation_result.get('confidence_level', 'unknown'),
+                            'has_validation_errors': validation_result.get('has_validation_errors', False),
+                            'requires_review': validation_result.get('requires_review', False),
+                            'errors_count': len(validation_result.get('validation_errors', [])),
+                            'warnings_count': len(validation_result.get('validation_warnings', [])),
+                            'alerts_count': len(validation_result.get('alerts', []))
+                        },
+                        'processing': {
+                            'processing_time': processing_metadata.get('processing_time', 0),
+                            'processing_timestamp': processing_metadata.get('processing_timestamp'),
+                            'pipeline_version': processing_metadata.get('pipeline_version'),
+                            'phases_executed': processing_metadata.get('phases_executed', [])
+                        },
+                        'extraction': {
+                            'extraction_time': metadata.get('extraction_time', 0),
+                            'extraction_method': metadata.get('extractor', 'llamaextract'),
+                            'schema_type': metadata.get('schema_type', 'completo')
+                        }
+                    }
+                }
+                
+                # Agregar información de Gemini retry si está disponible
+                gemini_retry = processing_metadata.get('gemini_retry', {})
+                if gemini_retry.get('was_retried'):
+                    legacy_format['metadata']['gemini_retry'] = {
+                        'used': True,
+                        'first_score': gemini_retry.get('first_score', 0),
+                        'second_score': gemini_retry.get('second_score', 0),
+                        'improvement': gemini_retry.get('improvement', 0),
+                        'method_used': gemini_retry.get('method_used', 'llamaextract')
+                    }
+                
                 # Store complete raw extraction AND processed data
                 invoice.raw_extraction = {
                     'raw_data': extracted,  # Datos originales de LlamaExtract
@@ -206,6 +244,19 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 
                 # Guardar validation_score
                 invoice.validation_score = validation_result.get('validation_score', 0.0)
+                
+                # Track extraction method and Gemini usage
+                gemini_info = processing_metadata.get('gemini_retry', {})
+                if use_gemini_only:
+                    invoice.extraction_method = 'gemini'
+                    invoice.gemini_retry_used = True
+                elif gemini_info.get('used'):
+                    invoice.extraction_method = 'both'
+                    invoice.gemini_retry_used = True
+                    invoice.gemini_improvement = gemini_info.get('improvement', 0)
+                else:
+                    invoice.extraction_method = 'llama'
+                    invoice.gemini_retry_used = False
                 
                 # Map documento fields (usar datos procesados) - solo si el segmento está presente
                 if 'documento' in processed_data:
@@ -336,7 +387,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                         'id': invoice.id,
                         'status': 'completed',
                         'message': 'Invoice processed successfully',
-                        'data': InvoiceSerializer(invoice).data
+                        'data': legacy_format  # Retornar formato legacy (estructura original)
                     },
                     status=status.HTTP_201_CREATED
                 )

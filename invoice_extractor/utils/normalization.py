@@ -579,6 +579,95 @@ def normalize_parte(parte: Dict[str, Any], is_empresa: bool = False) -> Dict[str
     return normalized
 
 
+def normalize_fiscalidad(fiscalidad: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    🧮 Normalizar estructura de fiscalidad
+    
+    Convierte formato plano de IVA (iva_21, iva_105, etc.) al formato
+    nativo legacy (iva: {"21": valor, "105": valor}).
+    
+    Args:
+        fiscalidad: Diccionario de fiscalidad
+    
+    Returns:
+        Fiscalidad normalizada con estructura IVA nativa
+    """
+    if not fiscalidad or not isinstance(fiscalidad, dict):
+        return fiscalidad
+    
+    normalized = fiscalidad.copy()
+    
+    # Normalizar impuestos IVA
+    if "impuestos" in normalized and isinstance(normalized["impuestos"], dict):
+        impuestos = normalized["impuestos"].copy()
+        
+        # Convertir formato plano a formato dict anidado
+        iva_dict = {}
+        
+        # Mapeo de campos planos a keys del dict
+        iva_mappings = {
+            "iva_21": "21",
+            "iva_105": "105",
+            "iva_27": "27",
+            "iva_5": "5",
+            "iva_25": "25"
+        }
+        
+        # Si ya existe formato dict, usarlo
+        if "iva" in impuestos and isinstance(impuestos["iva"], dict):
+            iva_dict = impuestos["iva"].copy()
+        else:
+            # Convertir desde formato plano
+            for flat_key, rate_key in iva_mappings.items():
+                if flat_key in impuestos:
+                    value = impuestos.pop(flat_key)
+                    try:
+                        float_value = float(value) if value is not None else 0.0
+                        if float_value > 0:
+                            iva_dict[rate_key] = float_value
+                    except (ValueError, TypeError):
+                        # Si no se puede convertir, ignorar
+                        pass
+        
+        # Reemplazar con formato dict
+        if iva_dict:
+            impuestos["iva"] = iva_dict
+        elif "iva" not in impuestos:
+            # Asegurar que existe aunque esté vacío
+            impuestos["iva"] = {}
+        
+        # Asegurar que TODOS los campos de impuestos existen (estructura legacy completa)
+        campos_impuestos_legacy = {
+            "icl_idc": 0,
+            "retencion_iva": None,
+            "percepcion_iva": 0,
+            "retencion_suss": None,
+            "percepcion_iibb": [],
+            "retenciones_iibb": [],
+            "otras_retenciones": None,
+            "impuestos_internos": 0,
+            "retencion_ganancias": None,
+            "percepcion_ganancias": 0
+        }
+        
+        # Agregar campos faltantes con valores por defecto
+        for campo, valor_default in campos_impuestos_legacy.items():
+            if campo not in impuestos:
+                impuestos[campo] = valor_default
+        
+        normalized["impuestos"] = impuestos
+        
+        # Asegurar que totales tiene 'descuentos'
+        if "totales" in normalized and isinstance(normalized["totales"], dict):
+            if "descuentos" not in normalized["totales"]:
+                normalized["totales"]["descuentos"] = 0
+        
+        # Nota: items_count e items_subtotal_total se calcularán en normalize_all()
+        # si están disponibles los items
+    
+    return normalized
+
+
 def normalize_all(data: Dict[str, Any]) -> Dict[str, Any]:
     """
     🎯 Normalizar estructura completa de comprobante
@@ -624,7 +713,32 @@ def normalize_all(data: Dict[str, Any]) -> Dict[str, Any]:
     
     # Fiscalidad (se normaliza pero no se valida aquí)
     if "fiscalidad" in data:
-        normalized["fiscalidad"] = data["fiscalidad"]
+        normalized["fiscalidad"] = normalize_fiscalidad(data["fiscalidad"])
+        
+        # Calcular items_count y items_subtotal_total si tenemos items
+        if "items" in normalized:
+            # Asegurar que calculos existe
+            if "calculos" not in normalized["fiscalidad"]:
+                normalized["fiscalidad"]["calculos"] = {}
+            
+            calculos = normalized["fiscalidad"]["calculos"]
+            items = normalized["items"]
+            
+            # Asegurar que calculos es un dict
+            if not isinstance(calculos, dict):
+                calculos = {}
+                normalized["fiscalidad"]["calculos"] = calculos
+            
+            # SIEMPRE recalcular items_count desde items (más confiable)
+            calculos["items_count"] = len(items)
+            
+            # SIEMPRE recalcular items_subtotal_total desde items (más confiable)
+            items_subtotal_total = sum(
+                float(item.get("subtotal", 0)) 
+                for item in items 
+                if isinstance(item, dict)
+            )
+            calculos["items_subtotal_total"] = items_subtotal_total
     
     # Metadata
     if "metadata" in data:

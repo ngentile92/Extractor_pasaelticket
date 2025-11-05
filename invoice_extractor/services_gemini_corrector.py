@@ -81,20 +81,38 @@ class GeminiCorrector:
         self._init_genai_client(api_key, service_account_path)
     
     def _init_genai_client(self, api_key: Optional[str], service_account_path: Optional[str]):
-        """Inicializar cliente Google GenAI"""
+        """Inicializar cliente Google GenAI con soporte para Railway/production"""
+        import tempfile
+        
         try:
             # Opción 1: API Key desde variable de entorno (buscar ambas variantes)
             if not api_key:
                 api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GOOGLE_AI_API_KEY")
             
             if api_key:
-                logger.info(f"🔐 Usando Google API Key desde variable de entorno: {api_key[:10]}...")
+                logger.info(f"🔐 Usando Google API Key: {api_key[:10]}...")
                 self.client = genai.Client(api_key=api_key)
                 self.auth_method = "api_key"
                 logger.info("✅ GenAI Client inicializado con API Key")
                 return
             
-            # Opción 2: Application Default Credentials (sin parámetros)
+            # Opción 2: Service Account desde JSON string (Railway/production)
+            service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+            if service_account_json:
+                logger.info("🔐 Usando Service Account desde variable de entorno JSON")
+                # Crear archivo temporal con las credenciales
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
+                    temp_file.write(service_account_json)
+                    temp_path = temp_file.name
+                
+                # Configurar GOOGLE_APPLICATION_CREDENTIALS temporalmente
+                os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_path
+                self.client = genai.Client()
+                self.auth_method = "service_account_json"
+                logger.info("✅ GenAI Client inicializado con Service Account (JSON env var)")
+                return
+            
+            # Opción 3: Application Default Credentials (archivo o ADC)
             # Esto usa automáticamente GOOGLE_APPLICATION_CREDENTIALS si está configurado
             logger.info("🔐 Intentando Application Default Credentials...")
             self.client = genai.Client()
@@ -103,6 +121,7 @@ class GeminiCorrector:
                 
         except Exception as e:
             logger.error(f"❌ Error inicializando GenAI Client: {e}")
+            logger.error("💡 Configura GOOGLE_API_KEY o GOOGLE_SERVICE_ACCOUNT_JSON en .env")
             raise
     
     def _upload_file_with_cache(self, file_path: str):

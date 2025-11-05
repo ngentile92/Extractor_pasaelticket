@@ -54,6 +54,31 @@ class Invoice(models.Model):
     )
     
     # ========================================================================
+    # Extraction Tracking & Costs
+    # ========================================================================
+    extraction_method = models.CharField(
+        max_length=20,
+        choices=[
+            ('llama', 'LlamaExtract'),
+            ('gemini', 'Gemini'),
+            ('both', 'LlamaExtract + Gemini')
+        ],
+        default='llama',
+        help_text='Extraction method used'
+    )
+    gemini_retry_used = models.BooleanField(
+        default=False,
+        help_text='Whether Gemini retry was triggered'
+    )
+    gemini_improvement = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Score improvement from Gemini retry (percentage points)'
+    )
+    
+    # ========================================================================
     # Document Information (Documento)
     # ========================================================================
     tipo_comprobante = models.CharField(

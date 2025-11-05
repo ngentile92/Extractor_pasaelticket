@@ -1,0 +1,50 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block content_title %}
+    <h1>{{ title }}</h1>
+    
+    {% if stats %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+        <!-- Total Facturas -->
+        <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 14px; color: #6c757d; margin-bottom: 5px;">📄 Total Comprobantes</div>
+            <div style="font-size: 32px; font-weight: bold; color: #212529;">{{ stats.total }}</div>
+        </div>
+        
+        <!-- Completadas -->
+        <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 14px; color: #6c757d; margin-bottom: 5px;">✅ Completadas</div>
+            <div style="font-size: 32px; font-weight: bold; color: #28a745;">{{ stats.completed }}</div>
+        </div>
+        
+        <!-- Tiempo Promedio -->
+        <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 14px; color: #6c757d; margin-bottom: 5px;">⏱️ Tiempo Promedio</div>
+            <div style="font-size: 32px; font-weight: bold; color: #17a2b8;">{{ stats.avg_time|floatformat:1 }}s</div>
+        </div>
+        
+        <!-- Score Promedio -->
+        <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 14px; color: #6c757d; margin-bottom: 5px;">📊 Score Promedio</div>
+            <div style="font-size: 32px; font-weight: bold; {% if stats.avg_score >= 80 %}color: #28a745;{% elif stats.avg_score >= 60 %}color: #ffc107;{% else %}color: #dc3545;{% endif %}">
+                {{ stats.avg_score|floatformat:0 }}%
+            </div>
+        </div>
+        
+        <!-- Total Facturado -->
+        <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 14px; color: #6c757d; margin-bottom: 5px;">💰 Total Facturado</div>
+            <div style="font-size: 24px; font-weight: bold; color: #28a745;">${{ stats.total_amount|floatformat:2|default:"0.00" }}</div>
+        </div>
+        
+        <!-- Gemini Usage -->
+        <div style="background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="font-size: 14px; color: #6c757d; margin-bottom: 5px;">🤖 Gemini Usado</div>
+            <div style="font-size: 32px; font-weight: bold; color: #6f42c1;">{{ stats.gemini_used }}</div>
+            <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">{{ stats.gemini_percentage|floatformat:1 }}% del total</div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+

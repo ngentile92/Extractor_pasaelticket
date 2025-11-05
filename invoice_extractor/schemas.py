@@ -352,31 +352,20 @@ class Impuestos(BaseModel):
     
     Includes VAT (IVA), perceptions, withholdings, and internal taxes.
     """
-    # IVA (Value Added Tax) - Simplified for LlamaExtract compatibility
-    iva_21: float = Field(
-        default=0,
-        description="IVA 21% amount",
-        ge=0
-    )
-    iva_105: float = Field(
-        default=0,
-        description="IVA 10.5% amount", 
-        ge=0
-    )
-    iva_27: float = Field(
-        default=0,
-        description="IVA 27% amount",
-        ge=0
-    )
-    iva_5: float = Field(
-        default=0,
-        description="IVA 5% amount",
-        ge=0
-    )
-    iva_25: float = Field(
-        default=0,
-        description="IVA 2.5% amount",
-        ge=0
+    # IVA (Value Added Tax) - Nested structure for legacy compatibility
+    iva: Dict[str, float] = Field(
+        default_factory=dict,
+        description="""IVA breakdown by rate as nested dict.
+        Common rates: '21', '105' (10.5%), '27', '5', '25' (2.5%)
+        Example: {"21": 187276.7, "105": 0}
+        
+        IMPORTANT: Keys must be strings representing the tax rate.
+        - "21" for 21% IVA
+        - "105" for 10.5% IVA  
+        - "27" for 27% IVA
+        - "5" for 5% IVA
+        - "25" for 2.5% IVA
+        """
     )
     
     # Perceptions (Percepciones)

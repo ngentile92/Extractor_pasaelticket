@@ -68,19 +68,21 @@ class FiscalValidatorAdvanced(FiscalValidator):
         impuestos = fiscalidad.get('impuestos', {})
         totales = fiscalidad.get('totales', {})
         
-        # Extraer valores de IVA
-        iva_21 = self.safe_float(impuestos.get('iva_21', 0))
-        iva_105 = self.safe_float(impuestos.get('iva_105', 0))
-        iva_27 = self.safe_float(impuestos.get('iva_27', 0))
-        iva_5 = self.safe_float(impuestos.get('iva_5', 0))
-        iva_25 = self.safe_float(impuestos.get('iva_25', 0))
-        
-        # También check formato antiguo
+        # Extraer valores de IVA (formato dict nativo)
         iva_dict = impuestos.get('iva', {})
         if isinstance(iva_dict, dict):
-            iva_21 += self.safe_float(iva_dict.get('21', 0))
-            iva_105 += self.safe_float(iva_dict.get('10.5', 0))
-            iva_27 += self.safe_float(iva_dict.get('27', 0))
+            iva_21 = self.safe_float(iva_dict.get('21', 0))
+            iva_105 = self.safe_float(iva_dict.get('105', 0))
+            iva_27 = self.safe_float(iva_dict.get('27', 0))
+            iva_5 = self.safe_float(iva_dict.get('5', 0))
+            iva_25 = self.safe_float(iva_dict.get('25', 0))
+        else:
+            # Fallback: formato plano legacy (por compatibilidad temporal)
+            iva_21 = self.safe_float(impuestos.get('iva_21', 0))
+            iva_105 = self.safe_float(impuestos.get('iva_105', 0))
+            iva_27 = self.safe_float(impuestos.get('iva_27', 0))
+            iva_5 = self.safe_float(impuestos.get('iva_5', 0))
+            iva_25 = self.safe_float(impuestos.get('iva_25', 0))
         
         # Calcular total IVA
         total_iva_calculated = iva_21 + iva_105 + iva_27 + iva_5 + iva_25
@@ -186,13 +188,19 @@ class FiscalValidatorAdvanced(FiscalValidator):
         descuentos = self.safe_float(totales.get('descuentos', 0))
         importe_total_declarado = self.safe_float(totales.get('importe_total', 0))
         
-        # IVA
+        # IVA (formato dict nativo)
         total_iva = 0.0
-        total_iva += self.safe_float(impuestos.get('iva_21', 0))
-        total_iva += self.safe_float(impuestos.get('iva_105', 0))
-        total_iva += self.safe_float(impuestos.get('iva_27', 0))
-        total_iva += self.safe_float(impuestos.get('iva_5', 0))
-        total_iva += self.safe_float(impuestos.get('iva_25', 0))
+        iva_dict = impuestos.get('iva', {})
+        if isinstance(iva_dict, dict):
+            for rate, amount in iva_dict.items():
+                total_iva += self.safe_float(amount)
+        else:
+            # Fallback
+            total_iva += self.safe_float(impuestos.get('iva_21', 0))
+            total_iva += self.safe_float(impuestos.get('iva_105', 0))
+            total_iva += self.safe_float(impuestos.get('iva_27', 0))
+            total_iva += self.safe_float(impuestos.get('iva_5', 0))
+            total_iva += self.safe_float(impuestos.get('iva_25', 0))
         
         # Formato antiguo de IVA
         iva_dict = impuestos.get('iva', {})
@@ -426,9 +434,15 @@ class FiscalValidatorAdvanced(FiscalValidator):
         
         # 1. IVA sin subtotal gravado
         total_iva = 0.0
-        total_iva += self.safe_float(impuestos.get('iva_21', 0))
-        total_iva += self.safe_float(impuestos.get('iva_105', 0))
-        total_iva += self.safe_float(impuestos.get('iva_27', 0))
+        iva_dict = impuestos.get('iva', {})
+        if isinstance(iva_dict, dict):
+            for rate, amount in iva_dict.items():
+                total_iva += self.safe_float(amount)
+        else:
+            # Fallback
+            total_iva += self.safe_float(impuestos.get('iva_21', 0))
+            total_iva += self.safe_float(impuestos.get('iva_105', 0))
+            total_iva += self.safe_float(impuestos.get('iva_27', 0))
         
         if total_iva > 0 and subtotal_gravado == 0:
             inconsistencies.append(
