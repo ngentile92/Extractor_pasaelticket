@@ -94,15 +94,15 @@ Si prefieres usar el Service Account que ya tienes (`factura-json-apikeys.json`)
 ### Paso 1: Habilitar Vertex AI API
 
 1. Ve a: https://console.cloud.google.com/apis/library/aiplatform.googleapis.com
-2. Selecciona proyecto: `factura-json`
+2. Selecciona tu proyecto de Google Cloud
 3. Clic en **"ENABLE"**
 
 ### Paso 2: Configurar `.env`
 
-El `.env` ya tiene la línea correcta:
+Agrega la ruta a tu archivo de credenciales:
 
 ```bash
-GOOGLE_APPLICATION_CREDENTIALS=/Users/nagge/Desktop/Nico/Extractor_pasaelticket/factura-json-apikeys.json
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/tu-service-account-key.json
 ```
 
 ### Paso 3: Agregar location (opcional)
@@ -123,8 +123,8 @@ python manage.py runserver
 ### Log esperado con Service Account:
 
 ```
-🔐 Usando Vertex AI con Service Account: .../factura-json-apikeys.json
-   Project ID: factura-json
+🔐 Usando Vertex AI con Service Account: .../tu-service-account-key.json
+   Project ID: tu-project-id
 ✅ GenAI Client inicializado con Vertex AI (location: us-central1)
 ```
 

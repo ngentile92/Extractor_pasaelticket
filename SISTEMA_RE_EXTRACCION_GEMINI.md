@@ -219,7 +219,7 @@ GOOGLE_API_KEY=AIzaSy...
 
 ```bash
 # .env
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/factura-json-apikeys.json
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/your-service-account-key.json
 ```
 
 El sistema intentará ambos métodos automáticamente.

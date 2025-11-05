@@ -106,7 +106,7 @@ Se muestra automáticamente arriba de la lista:
 # 1. Configurar Gemini (elegir una opción)
 export GOOGLE_API_KEY=AIzaSy...
 # O
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/factura-json-apikeys.json
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your-service-account-key.json
 
 # 2. Iniciar servidor
 python manage.py runserver

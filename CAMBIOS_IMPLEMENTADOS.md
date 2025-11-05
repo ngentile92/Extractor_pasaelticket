@@ -263,7 +263,7 @@ Navega a "Comprobantes" para ver:
 export GOOGLE_API_KEY=AIzaSy...
 
 # Opción B: Service Account
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/factura-json-apikeys.json
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your-service-account-key.json
 ```
 
 ---
