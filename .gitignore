@@ -65,6 +65,7 @@ media/
 # Temporary test results directories
 test_results_*/
 test_comparison_*/
+comparaciones_gemini_vs_llama/
 
 # Flask stuff:
 instance/

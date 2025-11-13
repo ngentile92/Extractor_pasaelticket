@@ -162,7 +162,7 @@ class GeminiCorrector:
         
         Criterios:
         - Si hay errores matemáticos en items
-        - Si el score de confiabilidad es < 0.6
+        - Si el score de confiabilidad es <= 0.8
         - Si hay más de 3 errores de validación
         
         Args:
@@ -174,9 +174,9 @@ class GeminiCorrector:
         score = validation_result.get("validation_score", 0)
         errors = validation_result.get("validation_errors", [])
         
-        # Criterio 1: Score muy bajo
-        if score < 0.6:
-            logger.info(f"🔄 Re-extracción recomendada: score bajo ({score:.2%})")
+        # Criterio 1: Score no óptimo (threshold ajustado a 0.8)
+        if score <= 0.8:
+            logger.info(f"🔄 Re-extracción recomendada: score no óptimo ({score:.2%}, threshold: 80%)")
             return True
         
         # Criterio 2: Muchos errores

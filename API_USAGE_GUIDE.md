@@ -2,8 +2,38 @@
 
 ## 🎯 Endpoints Disponibles
 
-### 1. `/api/invoices/process/` - Procesar una factura
-### 2. `/api/invoices/process-batch/` - Procesar múltiples facturas en paralelo (hasta 8)
+### 1. `/api/invoices/process/` - Procesar una factura (LlamaExtract + Gemini retry opcional)
+### 2. `/api/invoices/process-gemini/` - 🆕 Procesar una factura con Gemini 2.5 Flash exclusivamente
+### 3. `/api/invoices/process-batch/` - Procesar múltiples facturas en paralelo (hasta 8)
+
+---
+
+## 🆚 Comparación de Endpoints
+
+| Aspecto | `/process/` (Principal) | `/process-gemini/` (Gemini Puro) |
+|---------|------------------------|-----------------------------------|
+| **Extractor inicial** | LlamaExtract | Gemini 2.5 Flash |
+| **Retry automático** | Gemini (si score < 0.6) | Gemini con contexto (si score < 0.6) |
+| **Tiempo promedio** | 8-15s | 12-20s |
+| **Post-procesamiento** | ✅ Completo | ✅ Completo (idéntico) |
+| **Validaciones** | ✅ Todas | ✅ Todas (idéntico) |
+| **Formato de respuesta** | ✅ Legacy format | ✅ Legacy format (idéntico) |
+| **Extracción modular** | ✅ Soportado | ✅ Soportado |
+| **Costo estimado** | $0.002-0.005 | $0.01-0.02 |
+| **Cuándo usar** | Default, producción | Testing, backup, comparación |
+
+### 💡 Recomendaciones
+
+- **Usa `/process/`** (principal) para:
+  - Producción general
+  - Mejor balance velocidad/costo
+  - Flujo probado y estable
+
+- **Usa `/process-gemini/`** (Gemini puro) para:
+  - Testing y comparación de resultados
+  - Backup si LlamaExtract tiene problemas
+  - Facturas complejas que podrían beneficiarse de Gemini
+  - Evaluación de proveedores
 
 ---
 
@@ -173,7 +203,160 @@ curl -X POST http://localhost:8000/api/invoices/process/ \
 
 ---
 
-## 📦 2. Procesar Múltiples Facturas en Paralelo
+## 🤖 2. Procesar con Gemini 2.5 Flash Exclusivamente
+
+### Endpoint
+```
+POST /api/invoices-gemini/upload-gemini/
+```
+
+### Descripción
+
+Este endpoint utiliza **exclusivamente Gemini 2.5 Flash** para la extracción, sin usar LlamaExtract. Mantiene el mismo post-procesamiento, validaciones y formato de respuesta que el endpoint principal.
+
+**Ventajas**:
+- No requiere LLAMAAPI_KEY (solo credenciales de Google)
+- Un solo proveedor (Google)
+- Útil para testing A/B y comparación de resultados
+- Backup si LlamaExtract tiene problemas
+
+**Diferencias con `/process/`**:
+- Extracción inicial con Gemini en lugar de LlamaExtract
+- Retry también con Gemini (con contexto enriquecido)
+- Mismo formato de respuesta (100% compatible)
+
+### Parámetros
+
+| Parámetro | Tipo | Requerido | Default | Descripción |
+|-----------|------|-----------|---------|-------------|
+| `document` | File | ✅ Sí | - | Archivo de factura (PDF, JPG, PNG) |
+| `schema_type` | String | ❌ No | `completo` | Tipo de extracción: `completo`, `simplificado`, `modular` |
+| `segments` | Array | ❌ No | - | Segmentos a extraer (solo si `schema_type=modular`) |
+| `enable_retry` | Boolean | ❌ No | `true` | Habilitar retry automático con contexto si score < 0.6 |
+
+### Ejemplos cURL
+
+#### Extracción completa con Gemini
+```bash
+curl -X POST http://localhost:8000/api/invoices-gemini/upload-gemini/ \
+  -F "document=@Ejemplo1.jpeg"
+```
+
+#### Extracción modular (solo items y fiscalidad)
+```bash
+curl -X POST http://localhost:8000/api/invoices-gemini/upload-gemini/ \
+  -F "document=@Ejemplo2.jpeg" \
+  -F "schema_type=modular" \
+  -F "segments[]=items" \
+  -F "segments[]=fiscalidad"
+```
+
+#### Sin retry automático
+```bash
+curl -X POST http://localhost:8000/api/invoices-gemini/upload-gemini/ \
+  -F "document=@Ejemplo3.jpeg" \
+  -F "enable_retry=false"
+```
+
+### Response (Idéntico al endpoint principal)
+
+```json
+{
+  "id": 456,
+  "status": "completed",
+  "message": "Invoice processed successfully with Gemini",
+  "data": {
+    "items": [...],
+    "partes": {...},
+    "documento": {...},
+    "fiscalidad": {...},
+    "metadata": {
+      "validation": {
+        "validation_score": 0.92,
+        "confidence_level": "high",
+        "has_validation_errors": false,
+        "requires_review": false,
+        "errors_count": 0,
+        "warnings_count": 1,
+        "alerts_count": 0
+      },
+      "processing": {
+        "processing_time": 2.45,
+        "processing_timestamp": "2025-11-09T15:30:00",
+        "pipeline_version": "1.0.0",
+        "phases_executed": [
+          "normalization",
+          "corrections",
+          "fiscal_validation"
+        ]
+      },
+      "extraction": {
+        "extraction_time": 12.8,
+        "extraction_method": "gemini-2.5-flash",
+        "schema_type": "completo"
+      },
+      "gemini_retry": {
+        "used": true,
+        "first_score": 0.55,
+        "second_score": 0.92,
+        "improvement": 37.0,
+        "method_used": "gemini"
+      }
+    }
+  }
+}
+```
+
+### Campos Específicos de Gemini
+
+#### `metadata.extraction.extraction_method`
+- Valor: `"gemini-2.5-flash"`
+- Indica que se usó Gemini exclusivamente
+
+#### `metadata.gemini_retry` (opcional)
+Solo presente si se activó el retry automático:
+
+```json
+{
+  "used": true,
+  "first_score": 0.55,
+  "second_score": 0.92,
+  "improvement": 37.0,
+  "method_used": "gemini"
+}
+```
+
+- `used`: `true` si se ejecutó el retry
+- `first_score`: Score de la primera extracción
+- `second_score`: Score de la segunda extracción (con contexto)
+- `improvement`: Mejora en puntos porcentuales
+- `method_used`: `"gemini"` (siempre, ya que ambas extracciones son con Gemini)
+
+### Testing y Comparación
+
+#### Script de comparación
+```python
+import requests
+
+# Endpoint principal (LlamaExtract)
+r1 = requests.post('http://localhost:8000/api/invoices/process/', 
+                   files={'document': open('Ejemplo1.jpeg', 'rb')})
+
+# Endpoint Gemini
+r2 = requests.post('http://localhost:8000/api/invoices-gemini/upload-gemini/', 
+                   files={'document': open('Ejemplo1.jpeg', 'rb')})
+
+# Comparar scores
+score1 = r1.json()['data']['metadata']['validation']['validation_score']
+score2 = r2.json()['data']['metadata']['validation']['validation_score']
+
+print(f"LlamaExtract: {score1:.2%}")
+print(f"Gemini:       {score2:.2%}")
+```
+
+---
+
+## 📦 3. Procesar Múltiples Facturas en Paralelo
 
 ### Endpoint
 ```
