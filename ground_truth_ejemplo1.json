@@ -1,0 +1,156 @@
+{
+    "id": 220,
+    "status": "completed",
+    "original_filename": "Ejemplo1.jpeg",
+    "document": "http://127.0.0.1:8000/media/invoices/2025/11/28/Ejemplo1_PAoHzbL.jpeg",
+    "uploaded_at": "2025-11-28T14:26:54.864060Z",
+    "processed_at": "2025-11-28T14:27:15.812564Z",
+    "factura": {
+        "documento": {
+            "tipo": "FACTURA A",
+            "codigo": "001",
+            "numero": "00080-00000597",
+            "punto_venta": "00080",
+            "numero_comprobante": "00080-00000597",
+            "fecha_emision": "08/09/2023",
+            "cae": null,
+            "fecha_vencimiento_cae": null,
+            "moneda": "ARS",
+            "condicion_venta": "CONTADO"
+        },
+        "emisor": {
+            "razon_social": "SAN CRISTOBAL SOCIEDAD ANONIMA",
+            "cuit": "30-59485861-8",
+            "condicion_iva": "RESPONSABLE INSCRIPTO",
+            "domicilio": "RUTA PROVINCIAL 53 N\u00b01 896 RIO GALLEGOS C.P.S400 PCIA DE SANTA CRUZ",
+            "provincia": "SANTA CRUZ",
+            "ingresos_brutos": "305-848516-00",
+            "inicio_actividades": "1989-03-01"
+        },
+        "receptor": {
+            "razon_social": "AMERICAN IS MACHINES HOD S.A.",
+            "cuit": "30-71877009-9",
+            "condicion_iva": "RESPONSABLE INSCRIPTO",
+            "domicilio": "BLANCO ENCALADA, BARRIO LA PERLA N\u00b0 TEMP",
+            "provincia": null
+        },
+        "items": [
+            {
+                "descripcion": "FS 40% EN LA 2DA UN COMBO GRAN HAMB + BE",
+                "cantidad": 1.0,
+                "precio_unitario": 20082.64,
+                "subtotal": 20082.64,
+                "codigo": "94408951",
+                "unidad": null
+            },
+            {
+                "descripcion": "ROLL BROCHE POLLO + AQUARIUS",
+                "cantidad": 1.0,
+                "precio_unitario": 9338.84,
+                "subtotal": 9338.84,
+                "codigo": "97506595",
+                "unidad": null
+            }
+        ],
+        "cantidad_items": 2,
+        "totales": {
+            "subtotal_gravado": 29421.48,
+            "descuentos": 0.0,
+            "iva": {
+                "iva_21%": 6170.52,
+                "total_iva": 6170.52
+            },
+            "percepciones": {
+                "iibb": [
+                    {
+                        "provincia": "SANTA CRUZ",
+                        "monto": 441.32
+                    }
+                ],
+                "total_percepciones": 441.32
+            },
+            "retenciones": {
+                "total_retenciones": 0.0
+            },
+            "otros_impuestos": {},
+            "importe_total": 36041.32
+        }
+    },
+    "validacion": {
+        "score": 80.0,
+        "score_decimal": 0.8,
+        "nivel_confianza": "medio",
+        "indicador": "\ud83d\udfe1",
+        "requiere_revision": false,
+        "tiene_errores": true
+    },
+    "alertas": {
+        "errores": [
+            "Total calculado ($42203.84) no coincide con declarado ($36041.32) - diferencia: $6162.52 (17.10%)"
+        ],
+        "errores_count": 1,
+        "warnings": [
+            "Tipo de comprobante no est\u00e1ndar: 'FACTURA A'",
+            "\u26a0\ufe0f CUIT empresa auto-corregido: '30-53483461-8' \u2192 '30-53483461-2' (d\u00edgito verificador incorrecto - REVISAR en documento original)",
+            "\u26a0\ufe0f CUIT cliente auto-corregido: '30-71077059-9' \u2192 '30-71077059-6' (d\u00edgito verificador incorrecto - REVISAR en documento original)"
+        ],
+        "warnings_count": 3,
+        "alertas_criticas": [
+            {
+                "mensaje": "Total calculado ($42203.84) no coincide con declarado ($36041.32) - diferencia: $6162.52 (17.10%)",
+                "campo": "fiscalidad.totales.importe_total",
+                "sugerencia": "Revisar discriminaci\u00f3n de impuestos y c\u00e1lculo de total"
+            }
+        ],
+        "alertas_info": [
+            {
+                "mensaje": "Tipo de comprobante no est\u00e1ndar: 'FACTURA A'",
+                "campo": "fiscalidad",
+                "sugerencia": null
+            }
+        ],
+        "correcciones_aplicadas": [],
+        "recomendaciones": [
+            "\ud83e\uddee Revisar c\u00e1lculo de total (subtotal + IVA + percepciones - retenciones)"
+        ]
+    },
+    "metadata_extraccion": {
+        "tiempo_extraccion_seg": 20.540972,
+        "tiempo_procesamiento_seg": null,
+        "metodo_extraccion": "gemini-2.5-flash",
+        "schema_utilizado": "completo",
+        "version_pipeline": null,
+        "timestamp": null,
+        "orquestacion": {
+            "estrategia": "simple",
+            "decision_log": [
+                "\ud83d\ude80 Iniciando extracci\u00f3n inteligente: Ejemplo1_PAoHzbL_preprocessed.jpeg",
+                "\ud83d\udd0d FASE 1: Quick scan para an\u00e1lisis de complejidad",
+                "   \u2192 Clasificaci\u00f3n: SIMPLE (extracci\u00f3n completa en una pasada)"
+            ]
+        }
+    },
+    "items": [
+        {
+            "id": 861,
+            "codigo": "94408951",
+            "descripcion": "FS 40% EN LA 2DA UN COMBO GRAN HAMB + BE",
+            "cantidad": "1.0000",
+            "precio_unitario": "20082.6400",
+            "subtotal": "20082.64",
+            "unidad_medida": null,
+            "order": 0
+        },
+        {
+            "id": 862,
+            "codigo": "97506595",
+            "descripcion": "ROLL BROCHE POLLO + AQUARIUS",
+            "cantidad": "1.0000",
+            "precio_unitario": "9338.8400",
+            "subtotal": "9338.84",
+            "unidad_medida": null,
+            "order": 1
+        }
+    ],
+    "error_message": null
+}

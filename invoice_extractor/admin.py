@@ -15,60 +15,57 @@ class InvoiceItemInline(admin.TabularInline):
     readonly_fields = ['order']
     
     def has_add_permission(self, request, obj=None):
-        # Items son extraídos automáticamente, no se agregan manualmente
         return False
 
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
-    """Admin interface for Invoice model (Comprobantes)"""
+    """Admin interface for Invoice model - Estructura limpia"""
     list_display = [
         'id', 'colored_status', 'numero_comprobante', 'tipo_comprobante', 
         'empresa_razon_social', 'formatted_total', 'score_badge',
         'extraction_method_badge', 'uploaded_at'
     ]
-    list_filter = ['status', 'uploaded_at', 'tipo_comprobante', 'schema_type']
+    list_filter = ['status', 'uploaded_at', 'tipo_comprobante', 'extraction_method']
     search_fields = [
         'numero_comprobante', 'empresa_razon_social', 'empresa_cuit',
         'cliente_nombre', 'cliente_cuit', 'cae'
     ]
     readonly_fields = [
         'uploaded_at', 'processed_at', 'extraction_time', 
-        'has_complete_extraction', 'formatted_documento', 'formatted_partes',
-        'formatted_items_table', 'formatted_fiscalidad', 'formatted_metadata',
-        'formatted_validation_errors', 'formatted_raw_json'
+        'formatted_documento', 'formatted_partes',
+        'formatted_items_table', 'formatted_totales', 'formatted_validacion',
+        'formatted_alertas', 'formatted_metadata', 'formatted_raw_json'
     ]
     
     fieldsets = (
         ('📄 Estado del Documento', {
             'fields': (
                 'document', 'original_filename', 'status', 
-                'uploaded_at', 'processed_at', 'extraction_time', 'schema_type'
+                'uploaded_at', 'processed_at', 'extraction_time'
             )
         }),
-        ('📋 Datos del Documento', {
+        ('📋 Documento', {
             'fields': ('formatted_documento',),
-            'description': 'Información extraída del documento'
         }),
-        ('👥 Partes (Empresa y Cliente)', {
+        ('👥 Partes (Emisor y Receptor)', {
             'fields': ('formatted_partes',),
-            'description': 'Información del emisor y receptor'
         }),
-        ('📦 Items del Comprobante', {
+        ('📦 Items', {
             'fields': ('formatted_items_table',),
-            'description': 'Productos/servicios detallados'
         }),
-        ('💰 Información Fiscal', {
-            'fields': ('formatted_fiscalidad',),
-            'description': 'Totales, impuestos, percepciones y retenciones'
+        ('💰 Totales e Impuestos', {
+            'fields': ('formatted_totales',),
         }),
-        ('📊 Metadata de Procesamiento', {
+        ('📊 Validación', {
+            'fields': ('formatted_validacion',),
+        }),
+        ('⚠️ Alertas y Errores', {
+            'fields': ('formatted_alertas',),
+            'classes': ('collapse',)
+        }),
+        ('🔧 Metadata Técnica', {
             'fields': ('formatted_metadata',),
-            'description': 'Información sobre el proceso de extracción'
-        }),
-        ('⚠️ Validaciones y Errores', {
-            'fields': ('formatted_validation_errors',),
-            'description': 'Errores y advertencias detectadas',
             'classes': ('collapse',)
         }),
         ('🔍 Raw JSON', {
@@ -78,6 +75,73 @@ class InvoiceAdmin(admin.ModelAdmin):
     )
     
     inlines = [InvoiceItemInline]
+    
+    # =========================================================================
+    # HELPERS PARA OBTENER DATOS (soporta nueva estructura y legacy)
+    # =========================================================================
+    
+    def _get_factura_data(self, obj):
+        """Obtiene datos de factura (nueva estructura o legacy)."""
+        if not obj.raw_extraction:
+            return None
+        
+        # Nueva estructura
+        if 'factura' in obj.raw_extraction:
+            return obj.raw_extraction['factura']
+        
+        # Legacy: buscar en processed_data o raw_data
+        if 'processed_data' in obj.raw_extraction:
+            return obj.raw_extraction['processed_data']
+        if 'raw_data' in obj.raw_extraction:
+            return obj.raw_extraction['raw_data']
+        
+        return obj.raw_extraction
+    
+    def _get_validacion_data(self, obj):
+        """Obtiene datos de validación (nueva estructura o legacy)."""
+        if not obj.raw_extraction:
+            return None
+        
+        # Nueva estructura
+        if 'validacion' in obj.raw_extraction:
+            return obj.raw_extraction['validacion']
+        
+        # Legacy
+        return obj.raw_extraction.get('validation_result', {})
+    
+    def _get_alertas_data(self, obj):
+        """Obtiene alertas (nueva estructura o legacy)."""
+        if not obj.raw_extraction:
+            return None
+        
+        # Nueva estructura
+        if 'alertas' in obj.raw_extraction:
+            return obj.raw_extraction['alertas']
+        
+        # Legacy
+        validation = obj.raw_extraction.get('validation_result', {})
+        return {
+            'errores': validation.get('validation_errors', []),
+            'warnings': validation.get('validation_warnings', []),
+            'correcciones_aplicadas': validation.get('corrections_applied', []),
+            'recomendaciones': validation.get('recommendations', [])
+        }
+    
+    def _get_metadata_data(self, obj):
+        """Obtiene metadata (nueva estructura o legacy)."""
+        if not obj.raw_extraction:
+            return None
+        
+        # Nueva estructura
+        if 'metadata' in obj.raw_extraction:
+            return obj.raw_extraction['metadata']
+        
+        # Legacy
+        return obj.raw_extraction.get('processing_metadata', {})
+    
+    # =========================================================================
+    # LIST DISPLAY METHODS
+    # =========================================================================
     
     def colored_status(self, obj):
         """Display status with color coding"""
@@ -97,7 +161,6 @@ class InvoiceAdmin(admin.ModelAdmin):
     def formatted_total(self, obj):
         """Format total with currency"""
         if obj.importe_total is not None:
-            # Format the number first, then pass to format_html
             formatted_value = f'${float(obj.importe_total):,.2f}'
             return format_html(
                 '<strong style="font-size: 14px; color: #28a745;">{}</strong>',
@@ -123,7 +186,6 @@ class InvoiceAdmin(admin.ModelAdmin):
             color = '#dc3545'
             icon = '❌'
         
-        # Format the percentage first
         score_text = f'{icon} {score_percent:.0f}%'
         return format_html(
             '<span style="background-color: {}; color: white; padding: 3px 8px; border-radius: 3px; font-weight: bold;">{}</span>',
@@ -133,40 +195,41 @@ class InvoiceAdmin(admin.ModelAdmin):
     
     def extraction_method_badge(self, obj):
         """Show which extraction method was used"""
-        if not obj.raw_extraction:
-            return '-'
+        method = obj.extraction_method or 'llama'
         
-        metadata = obj.raw_extraction.get('processing_metadata', {})
-        gemini_info = metadata.get('gemini_retry', {})
+        if method == 'gemini' or obj.gemini_retry_used:
+            return format_html(
+                '<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px;">🤖 Gemini</span>'
+            )
         
-        if gemini_info.get('used'):
-            improvement = float(gemini_info.get('improvement', 0))
-            title_text = f'Mejorado con Gemini (+{improvement:.0f}pp)'
-            return format_html(
-                '<span style="background-color: #17a2b8; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px;" title="{}">🤖 Gemini</span>',
-                title_text
-            )
-        else:
-            return format_html(
-                '<span style="background-color: #6c757d; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px;">🦙 Llama</span>'
-            )
+        return format_html(
+            '<span style="background-color: #6c757d; color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px;">🦙 Llama</span>'
+        )
     extraction_method_badge.short_description = 'Método'
     
+    # =========================================================================
+    # DETAIL VIEW METHODS
+    # =========================================================================
+    
     def formatted_documento(self, obj):
-        """Display documento section in a formatted table"""
-        if not obj.raw_extraction or 'documento' not in obj.raw_extraction:
-            return format_html('<p style="color: #999;">No hay datos de documento disponibles</p>')
+        """Display documento section"""
+        factura = self._get_factura_data(obj)
+        if not factura:
+            return format_html('<p style="color: #999;">No hay datos disponibles</p>')
         
-        doc = obj.raw_extraction['documento']
+        # Nueva estructura: factura.documento
+        # Legacy: documento directamente
+        doc = factura.get('documento', factura)
         
-        html = '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">'
+        html = '<table style="width: 100%; border-collapse: collapse;">'
         html += '<tr style="background-color: #f8f9fa;"><th colspan="2" style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">📋 DOCUMENTO</th></tr>'
         
         fields = [
-            ('Tipo de Comprobante', doc.get('tipo_comprobante')),
+            ('Tipo', doc.get('tipo') or doc.get('tipo_comprobante')),
             ('Código AFIP', doc.get('codigo')),
-            ('Número', doc.get('numero_comprobante')),
+            ('Número Completo', doc.get('numero')),
             ('Punto de Venta', doc.get('punto_venta')),
+            ('Número', doc.get('numero_comprobante')),
             ('Fecha de Emisión', doc.get('fecha_emision')),
             ('CAE', doc.get('cae')),
             ('Vencimiento CAE', doc.get('fecha_vencimiento_cae')),
@@ -184,51 +247,54 @@ class InvoiceAdmin(admin.ModelAdmin):
     formatted_documento.short_description = 'Documento'
     
     def formatted_partes(self, obj):
-        """Display partes (empresa y cliente) in formatted tables"""
-        if not obj.raw_extraction or 'partes' not in obj.raw_extraction:
-            return format_html('<p style="color: #999;">No hay datos de partes disponibles</p>')
+        """Display partes (emisor y receptor)"""
+        factura = self._get_factura_data(obj)
+        if not factura:
+            return format_html('<p style="color: #999;">No hay datos disponibles</p>')
         
-        partes = obj.raw_extraction['partes']
-        empresa = partes.get('empresa', {})
-        cliente = partes.get('cliente', {})
+        # Nueva estructura: emisor/receptor
+        # Legacy: partes.empresa/partes.cliente
+        emisor = factura.get('emisor') or factura.get('partes', {}).get('empresa', {})
+        receptor = factura.get('receptor') or factura.get('partes', {}).get('cliente', {})
         
-        html = '<div style="display: flex; gap: 20px;">'
+        html = '<div style="display: flex; gap: 20px; flex-wrap: wrap;">'
         
-        # Empresa
-        html += '<div style="flex: 1;">'
+        # Emisor
+        html += '<div style="flex: 1; min-width: 300px;">'
         html += '<table style="width: 100%; border-collapse: collapse;">'
-        html += '<tr style="background-color: #e3f2fd;"><th colspan="2" style="padding: 10px; text-align: left; border-bottom: 2px solid #90caf9;">🏢 EMPRESA (Emisor)</th></tr>'
+        html += '<tr style="background-color: #e3f2fd;"><th colspan="2" style="padding: 10px; text-align: left; border-bottom: 2px solid #90caf9;">🏢 EMISOR</th></tr>'
         
-        empresa_fields = [
-            ('Razón Social', empresa.get('razon_social')),
-            ('CUIT', empresa.get('cuit')),
-            ('Condición IVA', empresa.get('condicion_iva')),
-            ('Domicilio', empresa.get('domicilio')),
-            ('Provincia', empresa.get('provincia')),
-            ('Ingresos Brutos', empresa.get('ingresos_brutos')),
+        emisor_fields = [
+            ('Razón Social', emisor.get('razon_social')),
+            ('CUIT', emisor.get('cuit')),
+            ('Condición IVA', emisor.get('condicion_iva')),
+            ('Domicilio', emisor.get('domicilio')),
+            ('Provincia', emisor.get('provincia')),
+            ('Ingresos Brutos', emisor.get('ingresos_brutos')),
+            ('Inicio Actividades', emisor.get('inicio_actividades') or emisor.get('fecha_inicio_actividades')),
         ]
         
-        for label, value in empresa_fields:
+        for label, value in emisor_fields:
             if value:
                 html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">{label}</td>'
                 html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{value}</td></tr>'
         
         html += '</table></div>'
         
-        # Cliente
-        html += '<div style="flex: 1;">'
+        # Receptor
+        html += '<div style="flex: 1; min-width: 300px;">'
         html += '<table style="width: 100%; border-collapse: collapse;">'
-        html += '<tr style="background-color: #fff3e0;"><th colspan="2" style="padding: 10px; text-align: left; border-bottom: 2px solid #ffb74d;">👤 CLIENTE (Receptor)</th></tr>'
+        html += '<tr style="background-color: #fff3e0;"><th colspan="2" style="padding: 10px; text-align: left; border-bottom: 2px solid #ffb74d;">👤 RECEPTOR</th></tr>'
         
-        cliente_fields = [
-            ('Nombre/Razón Social', cliente.get('apellido_nombre_razon_social')),
-            ('CUIT', cliente.get('cuit')),
-            ('Condición IVA', cliente.get('condicion_iva')),
-            ('Domicilio', cliente.get('domicilio')),
-            ('Provincia', cliente.get('provincia')),
+        receptor_fields = [
+            ('Razón Social', receptor.get('razon_social') or receptor.get('apellido_nombre_razon_social')),
+            ('CUIT', receptor.get('cuit')),
+            ('Condición IVA', receptor.get('condicion_iva')),
+            ('Domicilio', receptor.get('domicilio')),
+            ('Provincia', receptor.get('provincia')),
         ]
         
-        for label, value in cliente_fields:
+        for label, value in receptor_fields:
             if value:
                 html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">{label}</td>'
                 html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{value}</td></tr>'
@@ -239,41 +305,41 @@ class InvoiceAdmin(admin.ModelAdmin):
     formatted_partes.short_description = 'Partes'
     
     def formatted_items_table(self, obj):
-        """Display items in a beautiful table"""
-        if not obj.raw_extraction or 'items' not in obj.raw_extraction:
+        """Display items in a table"""
+        factura = self._get_factura_data(obj)
+        if not factura:
             return format_html('<p style="color: #999;">No hay items disponibles</p>')
         
-        items = obj.raw_extraction['items']
-        
+        items = factura.get('items', [])
         if not items:
             return format_html('<p style="color: #999;">Sin items</p>')
         
-        html = '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">'
+        html = '<table style="width: 100%; border-collapse: collapse;">'
         html += '<tr style="background-color: #e8f5e9;">'
         html += '<th style="padding: 10px; border-bottom: 2px solid #66bb6a; text-align: left;">#</th>'
-        html += '<th style="padding: 10px; border-bottom: 2px solid #66bb6a; text-align: left;">Código</th>'
         html += '<th style="padding: 10px; border-bottom: 2px solid #66bb6a; text-align: left;">Descripción</th>'
         html += '<th style="padding: 10px; border-bottom: 2px solid #66bb6a; text-align: right;">Cantidad</th>'
-        html += '<th style="padding: 10px; border-bottom: 2px solid #66bb6a; text-align: left;">U.M.</th>'
         html += '<th style="padding: 10px; border-bottom: 2px solid #66bb6a; text-align: right;">Precio Unit.</th>'
         html += '<th style="padding: 10px; border-bottom: 2px solid #66bb6a; text-align: right;">Subtotal</th>'
         html += '</tr>'
         
+        total_items = 0
         for idx, item in enumerate(items, 1):
-            html += f'<tr style="{"background-color: #f5f5f5;" if idx % 2 == 0 else ""}">'
+            subtotal = float(item.get('subtotal', 0) or 0)
+            total_items += subtotal
+            
+            bg = 'background-color: #f5f5f5;' if idx % 2 == 0 else ''
+            html += f'<tr style="{bg}">'
             html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{idx}</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{item.get("codigo", "-")}</td>'
             html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{item.get("descripcion", "-")}</td>'
             html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right;">{item.get("cantidad", 0)}</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{item.get("unidad_medida", "-")}</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right;">${item.get("precio_unitario", 0):,.2f}</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">${item.get("subtotal", 0):,.2f}</td>'
+            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right;">${float(item.get("precio_unitario", 0) or 0):,.2f}</td>'
+            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right; font-weight: bold;">${subtotal:,.2f}</td>'
             html += '</tr>'
         
-        # Total
-        total_items = sum(item.get('subtotal', 0) for item in items)
+        # Total row
         html += '<tr style="background-color: #c8e6c9; font-weight: bold;">'
-        html += '<td colspan="6" style="padding: 10px; text-align: right;">TOTAL ITEMS:</td>'
+        html += '<td colspan="4" style="padding: 10px; text-align: right;">TOTAL ITEMS:</td>'
         html += f'<td style="padding: 10px; text-align: right;">${total_items:,.2f}</td>'
         html += '</tr>'
         
@@ -281,178 +347,252 @@ class InvoiceAdmin(admin.ModelAdmin):
         return mark_safe(html)
     formatted_items_table.short_description = 'Items'
     
-    def formatted_fiscalidad(self, obj):
-        """Display fiscal information in formatted tables"""
-        if not obj.raw_extraction or 'fiscalidad' not in obj.raw_extraction:
-            return format_html('<p style="color: #999;">No hay datos fiscales disponibles</p>')
+    def formatted_totales(self, obj):
+        """Display totales e impuestos"""
+        factura = self._get_factura_data(obj)
+        if not factura:
+            return format_html('<p style="color: #999;">No hay datos disponibles</p>')
         
-        fiscal = obj.raw_extraction['fiscalidad']
-        totales = fiscal.get('totales', {})
-        calculos = fiscal.get('calculos', {})
-        impuestos = fiscal.get('impuestos', {})
+        # Nueva estructura: factura.totales
+        # Legacy: fiscalidad.totales + fiscalidad.impuestos
+        totales = factura.get('totales', {})
+        if not totales and 'fiscalidad' in factura:
+            totales = factura['fiscalidad'].get('totales', {})
         
-        html = '<div>'
+        html = '<div style="display: flex; gap: 20px; flex-wrap: wrap;">'
         
-        # Totales
-        html += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">'
+        # Totales principales
+        html += '<div style="flex: 1; min-width: 300px;">'
+        html += '<table style="width: 100%; border-collapse: collapse;">'
         html += '<tr style="background-color: #fff9c4;"><th colspan="2" style="padding: 10px; text-align: left; border-bottom: 2px solid #fbc02d;">💰 TOTALES</th></tr>'
         
-        totales_fields = [
-            ('Subtotal Gravado', totales.get('subtotal_gravado')),
-            ('Subtotal Exento', totales.get('subtotal_exento')),
-            ('Subtotal No Gravado', totales.get('subtotal_no_gravado')),
-            ('Descuentos', totales.get('descuentos')),
-            ('Importe Total', totales.get('importe_total')),
-        ]
+        subtotal = totales.get('subtotal_gravado')
+        if subtotal:
+            html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Subtotal Gravado</td>'
+            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right;">${float(subtotal):,.2f}</td></tr>'
         
-        for label, value in totales_fields:
-            if value is not None:
-                html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold; width: 250px;">{label}</td>'
-                html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right; font-size: 16px;">${value:,.2f}</td></tr>'
+        descuentos = totales.get('descuentos', 0)
+        if descuentos and float(descuentos) > 0:
+            html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Descuentos</td>'
+            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right; color: #dc3545;">-${float(descuentos):,.2f}</td></tr>'
         
-        html += '</table>'
+        total = totales.get('importe_total')
+        if total:
+            html += f'<tr style="background-color: #fff59d;"><td style="padding: 10px; font-weight: bold; font-size: 16px;">IMPORTE TOTAL</td>'
+            html += f'<td style="padding: 10px; text-align: right; font-weight: bold; font-size: 18px; color: #28a745;">${float(total):,.2f}</td></tr>'
         
-        # Impuestos
-        if impuestos:
-            html += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">'
-            html += '<tr style="background-color: #f3e5f5;"><th colspan="2" style="padding: 10px; text-align: left; border-bottom: 2px solid #ab47bc;">📊 IMPUESTOS</th></tr>'
-            
-            iva_items = impuestos.get('iva', [])
-            if iva_items:
-                html += '<tr><td colspan="2" style="padding: 8px; font-weight: bold; background-color: #fafafa;">IVA</td></tr>'
-                for iva in iva_items:
-                    html += f'<tr><td style="padding: 8px 8px 8px 30px; border-bottom: 1px solid #dee2e6;">Alícuota {iva.get("alicuota", 0)}%</td>'
-                    html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right;">${iva.get("importe", 0):,.2f}</td></tr>'
-            
-            percepciones = impuestos.get('percepciones', [])
-            if percepciones:
-                html += '<tr><td colspan="2" style="padding: 8px; font-weight: bold; background-color: #fafafa;">Percepciones</td></tr>'
-                for perc in percepciones:
-                    html += f'<tr><td style="padding: 8px 8px 8px 30px; border-bottom: 1px solid #dee2e6;">{perc.get("descripcion", "Percepción")}</td>'
-                    html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right;">${perc.get("importe", 0):,.2f}</td></tr>'
-            
-            retenciones = impuestos.get('retenciones', [])
-            if retenciones:
-                html += '<tr><td colspan="2" style="padding: 8px; font-weight: bold; background-color: #fafafa;">Retenciones</td></tr>'
-                for ret in retenciones:
-                    html += f'<tr><td style="padding: 8px 8px 8px 30px; border-bottom: 1px solid #dee2e6;">{ret.get("descripcion", "Retención")}</td>'
-                    html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right;">${ret.get("importe", 0):,.2f}</td></tr>'
-            
-            html += '</table>'
+        html += '</table></div>'
         
-        html += '</div>'
+        # IVA y otros impuestos
+        html += '<div style="flex: 1; min-width: 300px;">'
+        html += '<table style="width: 100%; border-collapse: collapse;">'
+        html += '<tr style="background-color: #f3e5f5;"><th colspan="2" style="padding: 10px; text-align: left; border-bottom: 2px solid #ab47bc;">📊 IMPUESTOS</th></tr>'
+        
+        # IVA
+        iva = totales.get('iva', {})
+        if iva:
+            for key, value in iva.items():
+                if value and float(value) > 0:
+                    label = key.replace('_', ' ').title()
+                    html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{label}</td>'
+                    html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right;">${float(value):,.2f}</td></tr>'
+        
+        # Percepciones
+        percepciones = totales.get('percepciones', {})
+        if percepciones:
+            total_perc = percepciones.get('total_percepciones', 0)
+            if total_perc and float(total_perc) > 0:
+                html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Total Percepciones</td>'
+                html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right;">${float(total_perc):,.2f}</td></tr>'
+        
+        # Retenciones
+        retenciones = totales.get('retenciones', {})
+        if retenciones:
+            total_ret = retenciones.get('total_retenciones', 0)
+            if total_ret and float(total_ret) > 0:
+                html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Total Retenciones</td>'
+                html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: right; color: #dc3545;">-${float(total_ret):,.2f}</td></tr>'
+        
+        html += '</table></div></div>'
+        
         return mark_safe(html)
-    formatted_fiscalidad.short_description = 'Fiscalidad'
+    formatted_totales.short_description = 'Totales'
     
-    def formatted_metadata(self, obj):
-        """Display processing metadata"""
-        if not obj.raw_extraction:
-            return format_html('<p style="color: #999;">No hay metadata disponible</p>')
+    def formatted_validacion(self, obj):
+        """Display validation score and status"""
+        validacion = self._get_validacion_data(obj)
+        if not validacion:
+            return format_html('<p style="color: #999;">No hay datos de validación</p>')
         
-        metadata = obj.raw_extraction.get('processing_metadata', {})
-        gemini_info = metadata.get('gemini_retry', {})
+        # Nueva estructura
+        score = validacion.get('score', validacion.get('validation_score', 0))
+        if isinstance(score, float) and score <= 1:
+            score = score * 100  # Convertir a porcentaje si es decimal
         
-        html = '<table style="width: 100%; border-collapse: collapse;">'
-        html += '<tr style="background-color: #e1f5fe;"><th colspan="2" style="padding: 10px; text-align: left; border-bottom: 2px solid #4fc3f7;">🔧 METADATA DE PROCESAMIENTO</th></tr>'
+        nivel = validacion.get('nivel_confianza', 'desconocido')
+        indicador = validacion.get('indicador', '⚪')
+        requiere = validacion.get('requiere_revision', False)
+        tiene_errores = validacion.get('tiene_errores', False)
         
-        # Tiempo de extracción
-        if obj.extraction_time:
-            html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold; width: 250px;">Tiempo de Extracción</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{obj.extraction_time:.2f} segundos</td></tr>'
-        
-        # Schema type
-        html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Schema Utilizado</td>'
-        html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{obj.schema_type}</td></tr>'
-        
-        # Gemini retry info
-        if gemini_info.get('used'):
-            html += '<tr><td colspan="2" style="padding: 8px; background-color: #e3f2fd; font-weight: bold;">🤖 Re-extracción con Gemini</td></tr>'
-            html += f'<tr><td style="padding: 8px 8px 8px 30px; border-bottom: 1px solid #dee2e6;">Score inicial (Llama)</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{gemini_info.get("first_score", 0)*100:.1f}%</td></tr>'
-            html += f'<tr><td style="padding: 8px 8px 8px 30px; border-bottom: 1px solid #dee2e6;">Score final (Gemini)</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{gemini_info.get("second_score", 0)*100:.1f}%</td></tr>'
-            html += f'<tr><td style="padding: 8px 8px 8px 30px; border-bottom: 1px solid #dee2e6;">Mejora</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; color: #28a745; font-weight: bold;">+{gemini_info.get("improvement", 0):.1f}pp</td></tr>'
-            html += f'<tr><td style="padding: 8px 8px 8px 30px; border-bottom: 1px solid #dee2e6;">Método usado</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{gemini_info.get("method_used", "N/A")}</td></tr>'
+        # Determinar color
+        if score >= 80:
+            color = '#28a745'
+        elif score >= 60:
+            color = '#ffc107'
         else:
-            reason = gemini_info.get('reason', 'No fue necesario')
-            html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Re-extracción Gemini</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">No utilizada - {reason}</td></tr>'
+            color = '#dc3545'
         
-        # Validation score
-        if obj.validation_score:
-            html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Score de Validación</td>'
-            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{float(obj.validation_score)*100:.2f}%</td></tr>'
+        html = '<div style="display: flex; gap: 20px; align-items: center; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">'
         
-        html += '</table>'
+        # Score grande
+        html += f'<div style="text-align: center; padding: 20px;">'
+        html += f'<div style="font-size: 48px; font-weight: bold; color: {color};">{score:.0f}%</div>'
+        html += f'<div style="font-size: 14px; color: #666;">Score de Validación</div>'
+        html += '</div>'
+        
+        # Detalles
+        html += '<div style="flex: 1;">'
+        html += f'<p><strong>Nivel de Confianza:</strong> {indicador} {nivel.upper()}</p>'
+        
+        if requiere:
+            html += '<p style="color: #ffc107;"><strong>⚠️ Requiere revisión manual</strong></p>'
+        
+        if tiene_errores:
+            html += '<p style="color: #dc3545;"><strong>❌ Contiene errores de validación</strong></p>'
+        else:
+            html += '<p style="color: #28a745;"><strong>✅ Sin errores críticos</strong></p>'
+        
+        html += '</div></div>'
+        
         return mark_safe(html)
-    formatted_metadata.short_description = 'Metadata'
+    formatted_validacion.short_description = 'Validación'
     
-    def formatted_validation_errors(self, obj):
-        """Display validation errors and warnings"""
-        if not obj.raw_extraction:
-            return format_html('<p style="color: #999;">No hay información de validación disponible</p>')
+    def formatted_alertas(self, obj):
+        """Display alerts, errors, and warnings"""
+        alertas = self._get_alertas_data(obj)
+        if not alertas:
+            return format_html('<p style="color: #28a745;">✅ Sin alertas</p>')
         
-        validation = obj.raw_extraction.get('validation', {})
-        errors = validation.get('errors', [])
-        warnings = validation.get('warnings', [])
-        alerts = validation.get('alerts', [])
+        errores = alertas.get('errores', [])
+        warnings = alertas.get('warnings', [])
+        correcciones = alertas.get('correcciones_aplicadas', [])
+        recomendaciones = alertas.get('recomendaciones', [])
         
-        if not errors and not warnings and not alerts:
+        if not errores and not warnings and not correcciones:
             return format_html('<p style="color: #28a745; font-weight: bold;">✅ Sin errores ni advertencias</p>')
         
         html = '<div>'
         
-        # Errors
-        if errors:
-            html += '<div style="margin-bottom: 15px;">'
-            html += '<h4 style="color: #dc3545; margin-bottom: 10px;">❌ ERRORES</h4>'
+        # Errores
+        if errores:
+            html += '<div style="margin-bottom: 15px; padding: 10px; background-color: #ffebee; border-radius: 5px;">'
+            html += f'<h4 style="color: #dc3545; margin: 0 0 10px 0;">❌ ERRORES ({len(errores)})</h4>'
             html += '<ul style="margin: 0; padding-left: 20px;">'
-            for error in errors:
+            for error in errores:
                 html += f'<li style="color: #dc3545; margin-bottom: 5px;">{error}</li>'
             html += '</ul></div>'
         
         # Warnings
         if warnings:
-            html += '<div style="margin-bottom: 15px;">'
-            html += '<h4 style="color: #ffc107; margin-bottom: 10px;">⚠️ ADVERTENCIAS</h4>'
+            html += '<div style="margin-bottom: 15px; padding: 10px; background-color: #fff8e1; border-radius: 5px;">'
+            html += f'<h4 style="color: #ff8f00; margin: 0 0 10px 0;">⚠️ ADVERTENCIAS ({len(warnings)})</h4>'
             html += '<ul style="margin: 0; padding-left: 20px;">'
             for warning in warnings:
                 html += f'<li style="color: #856404; margin-bottom: 5px;">{warning}</li>'
             html += '</ul></div>'
         
-        # Alerts
-        if alerts:
-            html += '<div>'
-            html += '<h4 style="color: #17a2b8; margin-bottom: 10px;">🔔 ALERTAS</h4>'
+        # Correcciones aplicadas
+        if correcciones:
+            html += '<div style="margin-bottom: 15px; padding: 10px; background-color: #e3f2fd; border-radius: 5px;">'
+            html += f'<h4 style="color: #1976d2; margin: 0 0 10px 0;">🔧 CORRECCIONES APLICADAS ({len(correcciones)})</h4>'
             html += '<ul style="margin: 0; padding-left: 20px;">'
-            for alert in alerts:
-                html += f'<li style="color: #0c5460; margin-bottom: 5px;">{alert}</li>'
+            for corr in correcciones:
+                html += f'<li style="color: #0d47a1; margin-bottom: 5px;">{corr}</li>'
+            html += '</ul></div>'
+        
+        # Recomendaciones
+        if recomendaciones:
+            html += '<div style="padding: 10px; background-color: #f5f5f5; border-radius: 5px;">'
+            html += '<h4 style="color: #666; margin: 0 0 10px 0;">💡 RECOMENDACIONES</h4>'
+            html += '<ul style="margin: 0; padding-left: 20px;">'
+            for rec in recomendaciones:
+                html += f'<li style="color: #666; margin-bottom: 5px;">{rec}</li>'
             html += '</ul></div>'
         
         html += '</div>'
         return mark_safe(html)
-    formatted_validation_errors.short_description = 'Validaciones'
+    formatted_alertas.short_description = 'Alertas'
+    
+    def formatted_metadata(self, obj):
+        """Display processing metadata"""
+        metadata = self._get_metadata_data(obj)
+        if not metadata:
+            return format_html('<p style="color: #999;">No hay metadata disponible</p>')
+        
+        html = '<table style="width: 100%; border-collapse: collapse;">'
+        html += '<tr style="background-color: #e1f5fe;"><th colspan="2" style="padding: 10px; text-align: left; border-bottom: 2px solid #4fc3f7;">🔧 METADATA</th></tr>'
+        
+        # Tiempo
+        tiempo = metadata.get('tiempo_extraccion_seg') or obj.extraction_time
+        if tiempo:
+            html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Tiempo de Extracción</td>'
+            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{float(tiempo):.2f} segundos</td></tr>'
+        
+        # Método
+        metodo = metadata.get('metodo_extraccion') or obj.extraction_method
+        html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Método de Extracción</td>'
+        html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{metodo}</td></tr>'
+        
+        # Schema
+        schema = metadata.get('schema_utilizado') or obj.schema_type
+        html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Schema Utilizado</td>'
+        html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{schema}</td></tr>'
+        
+        # Gemini retry
+        gemini_retry = metadata.get('gemini_retry', {})
+        if gemini_retry.get('utilizado'):
+            html += '<tr><td colspan="2" style="padding: 8px; background-color: #e3f2fd; font-weight: bold;">🤖 Re-extracción con Gemini</td></tr>'
+            html += f'<tr><td style="padding: 8px 8px 8px 30px; border-bottom: 1px solid #dee2e6;">Score inicial</td>'
+            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{gemini_retry.get("score_inicial", 0):.1f}%</td></tr>'
+            html += f'<tr><td style="padding: 8px 8px 8px 30px; border-bottom: 1px solid #dee2e6;">Score final</td>'
+            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{gemini_retry.get("score_final", 0):.1f}%</td></tr>'
+            mejora = gemini_retry.get("mejora_pp", 0)
+            color = '#28a745' if mejora > 0 else '#dc3545'
+            html += f'<tr><td style="padding: 8px 8px 8px 30px; border-bottom: 1px solid #dee2e6;">Mejora</td>'
+            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6; color: {color}; font-weight: bold;">{mejora:+.1f}pp</td></tr>'
+        
+        # Orquestación
+        orquestacion = metadata.get('orquestacion', {})
+        if orquestacion:
+            estrategia = orquestacion.get('estrategia', 'N/A')
+            html += f'<tr><td style="padding: 8px; border-bottom: 1px solid #dee2e6; font-weight: bold;">Estrategia de Orquestación</td>'
+            html += f'<td style="padding: 8px; border-bottom: 1px solid #dee2e6;">{estrategia}</td></tr>'
+        
+        html += '</table>'
+        return mark_safe(html)
+    formatted_metadata.short_description = 'Metadata'
     
     def formatted_raw_json(self, obj):
-        """Display raw JSON in a formatted way"""
+        """Display raw JSON"""
         if not obj.raw_extraction:
-            return format_html('<p style="color: #999;">No hay raw JSON disponible</p>')
+            return format_html('<p style="color: #999;">No hay JSON disponible</p>')
         
         try:
             formatted_json = json.dumps(obj.raw_extraction, indent=2, ensure_ascii=False)
-            html = f'<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 500px;">{formatted_json}</pre>'
+            html = f'<pre style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 500px; font-size: 12px;">{formatted_json}</pre>'
             return mark_safe(html)
         except Exception as e:
-            return format_html('<p style="color: #dc3545;">Error al formatear JSON: {}</p>', str(e))
+            return format_html('<p style="color: #dc3545;">Error: {}</p>', str(e))
     formatted_raw_json.short_description = 'Raw JSON'
+    
+    # =========================================================================
+    # CHANGELIST VIEW
+    # =========================================================================
     
     def changelist_view(self, request, extra_context=None):
         """Add statistics to the change list view"""
         extra_context = extra_context or {}
         
-        # Get statistics
         stats = Invoice.objects.aggregate(
             total=Count('id'),
             completed=Count('id', filter=Q(status='completed')),
@@ -461,12 +601,10 @@ class InvoiceAdmin(admin.ModelAdmin):
             total_amount=Sum('importe_total')
         )
         
-        # Count Gemini retries
-        gemini_used = 0
-        if Invoice.objects.filter(status='completed').exists():
-            for invoice in Invoice.objects.filter(status='completed'):
-                if invoice.raw_extraction and invoice.raw_extraction.get('processing_metadata', {}).get('gemini_retry', {}).get('used'):
-                    gemini_used += 1
+        # Count Gemini usage
+        gemini_used = Invoice.objects.filter(
+            Q(extraction_method='gemini') | Q(gemini_retry_used=True)
+        ).count()
         
         extra_context['stats'] = {
             'total': stats['total'] or 0,

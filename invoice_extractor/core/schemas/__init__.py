@@ -1,19 +1,25 @@
+# invoice_extractor/core/schemas/__init__.py
 """
-📋 Pydantic Schemas for Argentine Invoice Data Extraction
+📋 Schemas - Definiciones de datos para facturas argentinas
 
-Este archivo re-exporta desde core/schemas/ para facilitar importaciones.
-Las definiciones reales están en invoice_extractor/core/schemas/invoice.py
+Schemas únicos y consolidados para toda la aplicación.
 
 Uso:
-    from invoice_extractor.schemas import InvoiceComplete, SchemaComposer
+    from invoice_extractor.core.schemas import (
+        InvoiceItem,
+        InvoicePartes,
+        InvoiceDocumento,
+        InvoiceFiscalidad,
+        InvoiceComplete,
+        SchemaComposer,
+    )
 """
 
-# Re-exportar todo desde core/schemas/
-from invoice_extractor.core.schemas import (
+from .invoice import (
     # Items
     InvoiceItem,
     
-    # Partes
+    # Partes (Cliente y Empresa)
     Cliente,
     Empresa,
     InvoicePartes,
@@ -32,7 +38,7 @@ from invoice_extractor.core.schemas import (
     InvoiceComplete,
     InvoiceSimplificado,
     
-    # Composer
+    # Composer para extracción modular
     SchemaComposer,
 )
 

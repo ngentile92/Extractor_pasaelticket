@@ -1,0 +1,367 @@
+{
+    "id": 221,
+    "status": "completed",
+    "original_filename": "Ejemplo2.jpeg",
+    "document": "http://127.0.0.1:8000/media/invoices/2025/11/28/Ejemplo2_QNKNM7l.jpeg",
+    "uploaded_at": "2025-11-28T14:27:42.995092Z",
+    "processed_at": "2025-11-28T14:29:56.066898Z",
+    "factura": {
+        "documento": {
+            "tipo": "FACTURA A",
+            "codigo": "001",
+            "numero": "0681-00305998",
+            "punto_venta": "0681",
+            "numero_comprobante": "00305998",
+            "fecha_emision": "16/10/2025",
+            "cae": "35416294418039",
+            "fecha_vencimiento_cae": "31/10/2025",
+            "moneda": "ARS",
+            "condicion_venta": "CONTADO"
+        },
+        "emisor": {
+            "razon_social": "COCA-COLA FEMSA DE BUENOS AIRES S.P.A.",
+            "cuit": "30-52539008-6",
+            "condicion_iva": "RESPONSABLE INSCRIPTO",
+            "domicilio": "AV. AMANCIO ALCORTA 3506/8 BUENOS AIRES",
+            "provincia": "CIUDAD AUT\u00d3NOMA DE BUENOS AIRES",
+            "ingresos_brutos": "901-000000-0",
+            "inicio_actividades": null
+        },
+        "receptor": {
+            "razon_social": "BUSAN MOTORS S.A.",
+            "cuit": "33-71067631-9",
+            "condicion_iva": "RESPONSABLE INSCRIPTO",
+            "domicilio": "AVENIDA 12 DE OCTUBRE 1629 - PILAR",
+            "provincia": "BUENOS AIRES"
+        },
+        "items": [
+            {
+                "descripcion": "MONSTER GREEN EAN 473X6",
+                "cantidad": 2.0,
+                "precio_unitario": 8096.12,
+                "subtotal": 16192.24,
+                "codigo": "100972",
+                "unidad": "CJ"
+            },
+            {
+                "descripcion": "SW591X6 S/G (6P)",
+                "cantidad": 8.0,
+                "precio_unitario": 3747.15,
+                "subtotal": 29977.20,
+                "codigo": "84819",
+                "unidad": "CJ"
+            },
+            {
+                "descripcion": "CC ZERO 600MLX6.",
+                "cantidad": 6.0,
+                "precio_unitario": 6598.35,
+                "subtotal": 39590.10,
+                "codigo": "48",
+                "unidad": "CJ"
+            },
+            {
+                "descripcion": "SPRITE ZERO P600 X6..",
+                "cantidad": 4.0,
+                "precio_unitario": 6837.02,
+                "subtotal": 27348.08,
+                "codigo": "197",
+                "unidad": "CJ"
+            },
+            {
+                "descripcion": "CCSO 600CCX6.",
+                "cantidad": 4.0,
+                "precio_unitario": 6598.25,
+                "subtotal": 26393.00,
+                "codigo": "2843",
+                "unidad": "CJ"
+            },
+            {
+                "descripcion": "CCL 600CC X6.",
+                "cantidad": 2.0,
+                "precio_unitario": 6598.25,
+                "subtotal": 13196.50,
+                "codigo": "2845",
+                "unidad": "CJ"
+            },
+            {
+                "descripcion": "AQ. PERA S/G 600X6",
+                "cantidad": 2.0,
+                "precio_unitario": 5184.68,
+                "subtotal": 10369.36,
+                "codigo": "84441",
+                "unidad": "CJ"
+            },
+            {
+                "descripcion": "AQ. POM.S/G 600X6",
+                "cantidad": 2.0,
+                "precio_unitario": 5363.23,
+                "subtotal": 10726.46,
+                "codigo": "84442",
+                "unidad": "CJ"
+            },
+            {
+                "descripcion": "AQ. POM.ROS.S/G 600X6",
+                "cantidad": 1.0,
+                "precio_unitario": 5363.23,
+                "subtotal": 5363.23,
+                "codigo": "84445",
+                "unidad": "CJ"
+            },
+            {
+                "descripcion": "CEPITA MANZ 200X6 TETRA LEAF",
+                "cantidad": 1.0,
+                "precio_unitario": 4261.50,
+                "subtotal": 4261.50,
+                "codigo": "100222",
+                "unidad": "CJ"
+            },
+            {
+                "descripcion": "CEPITA M.FR 200X6 TETRA LEAF",
+                "cantidad": 1.0,
+                "precio_unitario": 3407.02,
+                "subtotal": 3407.02,
+                "codigo": "100224",
+                "unidad": "CJ"
+            }
+            ],
+        "cantidad_items": 33,
+        "totales": {
+            "subtotal_gravado": 152173.71,
+            "descuentos": 34650.98,
+            "iva": {
+                "iva_21%": 31956.48,
+                "total_iva": 31956.48
+            },
+            "percepciones": {
+                "iibb": [
+                    {
+                        "provincia": "desconocida",
+                        "monto": 8081.72
+                    }
+                ],
+                "total_percepciones": 12646.92
+            },
+            "retenciones": {
+                "total_retenciones": 0.0
+            },
+            "otros_impuestos": {
+                "impuestos_internos": 9460.84
+            },
+            "importe_total": 206237.95
+        }
+    },
+    "validacion": {
+        "score": 45.0,
+        "score_decimal": 0.45,
+        "nivel_confianza": "bajo",
+        "indicador": "\ud83d\udd34",
+        "requiere_revision": true,
+        "tiene_errores": true
+    },
+    "alertas": {
+        "errores": [
+            "Suma de items no coincide: suma $1382794365.08 vs total declarado $1363900953.90 (diff: $18893411.18, 1.39%)",
+            "Inconsistencia items-subtotal: suma items $1382794365.08 vs subtotal $1363900953.90 (diff: $18893411.18)",
+            "Inconsistencia total: calculado $1654363589.03 vs declarado $206237.95 (diff: $1654157351.08)",
+            "Provincias IIBB no reconocidas: ['desconocida']",
+            "Total calculado ($1944804181.28) no coincide con declarado ($206237.95) - diferencia: $1944597943.33 (942890.45%)"
+        ],
+        "errores_count": 5,
+        "warnings": [
+            "Diferencia menor: calculado $452880000.18 vs declarado $452880000.00 (diff: $0.18, 0.00%)",
+            "Diferencia menor: calculado $452880000.18 vs declarado $452880000.00 (diff: $0.18, 0.00%)",
+            "2 item(s) con errores de c\u00e1lculo: \u00edndices [7, 8]",
+            "Item 6 (PERA S/G 600X6): cantidad muy alta (84441.0 vs promedio 23569.8), subtotal muy alto ($437799563.88 vs promedio $125708578.64)",
+            "Item 7 (POM.S/G 600X6): cantidad muy alta (84441.6518 vs promedio 23569.8), subtotal muy alto ($452880000.00 vs promedio $125708578.64)",
+            "Item 8 (POM.ROS.S/G 600X6): cantidad muy alta (84441.6518 vs promedio 23569.8), subtotal muy alto ($452880000.00 vs promedio $125708578.64)",
+            "Tipo de comprobante no est\u00e1ndar: 'FACTURA A'"
+        ],
+        "warnings_count": 7,
+        "alertas_criticas": [
+            {
+                "mensaje": "Suma de items no coincide: suma $1382794365.08 vs total declarado $1363900953.90 (diff: $18893411.18, 1.39%)",
+                "campo": "fiscalidad.totales.subtotal_gravado",
+                "sugerencia": "Revisar suma de items o subtotal declarado"
+            },
+            {
+                "mensaje": "Total calculado ($1944804181.28) no coincide con declarado ($206237.95) - diferencia: $1944597943.33 (942890.45%)",
+                "campo": "fiscalidad.totales.importe_total",
+                "sugerencia": "Revisar discriminaci\u00f3n de impuestos y c\u00e1lculo de total"
+            }
+        ],
+        "alertas_info": [
+            {
+                "mensaje": "Diferencia menor: calculado $452880000.18 vs declarado $452880000.00 (diff: $0.18, 0.00%)",
+                "campo": "items[7].subtotal",
+                "sugerencia": "Verificar c\u00e1lculo: 84441.6518 \u00d7 $5363.23"
+            },
+            {
+                "mensaje": "Diferencia menor: calculado $452880000.18 vs declarado $452880000.00 (diff: $0.18, 0.00%)",
+                "campo": "items[8].subtotal",
+                "sugerencia": "Verificar c\u00e1lculo: 84441.6518 \u00d7 $5363.23"
+            },
+            {
+                "mensaje": "Valor anormal detectado: cantidad muy alta (84441.0 vs promedio 23569.8), subtotal muy alto ($437799563.88 vs promedio $125708578.64)",
+                "campo": "items[6]",
+                "sugerencia": "Verificar datos del item 'PERA S/G 600X6'"
+            },
+            {
+                "mensaje": "Valor anormal detectado: cantidad muy alta (84441.6518 vs promedio 23569.8), subtotal muy alto ($452880000.00 vs promedio $125708578.64)",
+                "campo": "items[7]",
+                "sugerencia": "Verificar datos del item 'POM.S/G 600X6'"
+            },
+            {
+                "mensaje": "Valor anormal detectado: cantidad muy alta (84441.6518 vs promedio 23569.8), subtotal muy alto ($452880000.00 vs promedio $125708578.64)",
+                "campo": "items[8]",
+                "sugerencia": "Verificar datos del item 'POM.ROS.S/G 600X6'"
+            },
+            {
+                "mensaje": "Tipo de comprobante no est\u00e1ndar: 'FACTURA A'",
+                "campo": "fiscalidad",
+                "sugerencia": null
+            }
+        ],
+        "correcciones_aplicadas": [],
+        "recomendaciones": [
+            "\ud83d\udea8 CR\u00cdTICO: Revisar manualmente todos los datos antes de procesar",
+            "Considerar re-escanear el documento con mejor calidad",
+            "\ud83d\udce6 Revisar c\u00e1lculos de items (cantidad \u00d7 precio = subtotal)",
+            "\ud83e\uddee Revisar c\u00e1lculo de total (subtotal + IVA + percepciones - retenciones)"
+        ]
+    },
+    "metadata_extraccion": {
+        "tiempo_extraccion_seg": 49.107224,
+        "tiempo_procesamiento_seg": null,
+        "metodo_extraccion": "gemini-2.5-flash",
+        "schema_utilizado": "completo",
+        "version_pipeline": null,
+        "timestamp": null,
+        "gemini_retry": {
+            "utilizado": true,
+            "score_inicial": 45.0,
+            "score_final": 45.0,
+            "mejora_pp": 0.0
+        },
+        "orquestacion": {
+            "estrategia": "simple",
+            "decision_log": [
+                "\ud83d\ude80 Iniciando extracci\u00f3n inteligente: Ejemplo2_QNKNM7l_preprocessed.jpeg",
+                "\ud83d\udd0d FASE 1: Quick scan para an\u00e1lisis de complejidad",
+                "   \u2192 Clasificaci\u00f3n: SIMPLE (extracci\u00f3n completa en una pasada)"
+            ]
+        }
+    },
+    "items": [
+        {
+            "id": 863,
+            "codigo": "100992",
+            "descripcion": "MONSTER GREEN EAN 473X6",
+            "cantidad": "2.0000",
+            "precio_unitario": "8096.1200",
+            "subtotal": "16192.24",
+            "unidad_medida": "CJ",
+            "order": 0
+        },
+        {
+            "id": 864,
+            "codigo": "84813",
+            "descripcion": "SW591X6 S/G (6P)",
+            "cantidad": "8.0000",
+            "precio_unitario": "3747.1500",
+            "subtotal": "29977.20",
+            "unidad_medida": "CJ",
+            "order": 1
+        },
+        {
+            "id": 865,
+            "codigo": "CC ZERO",
+            "descripcion": "500MLX6",
+            "cantidad": "48.0000",
+            "precio_unitario": "6598.3500",
+            "subtotal": "316720.80",
+            "unidad_medida": "CJ",
+            "order": 2
+        },
+        {
+            "id": 866,
+            "codigo": "SPRITE ZERO",
+            "descripcion": "P600 X6...",
+            "cantidad": "197.0000",
+            "precio_unitario": "6837.0200",
+            "subtotal": "1346892.94",
+            "unidad_medida": "CJ",
+            "order": 3
+        },
+        {
+            "id": 867,
+            "codigo": "CCSO",
+            "descripcion": "600CCX6",
+            "cantidad": "2843.0000",
+            "precio_unitario": "6598.2500",
+            "subtotal": "18758824.75",
+            "unidad_medida": "CJ",
+            "order": 4
+        },
+        {
+            "id": 868,
+            "codigo": "CEL",
+            "descripcion": "600CC X6",
+            "cantidad": "2843.0000",
+            "precio_unitario": "6598.2500",
+            "subtotal": "18758824.75",
+            "unidad_medida": "CJ",
+            "order": 5
+        },
+        {
+            "id": 869,
+            "codigo": "84441 AQ.",
+            "descripcion": "PERA S/G 600X6",
+            "cantidad": "84441.0000",
+            "precio_unitario": "5184.6800",
+            "subtotal": "437799563.88",
+            "unidad_medida": "CJ",
+            "order": 6
+        },
+        {
+            "id": 870,
+            "codigo": "84442 AQ.",
+            "descripcion": "POM.S/G 600X6",
+            "cantidad": "84441.6518",
+            "precio_unitario": "5363.2300",
+            "subtotal": "452880000.00",
+            "unidad_medida": "CJ",
+            "order": 7
+        },
+        {
+            "id": 871,
+            "codigo": "84443 AQ.",
+            "descripcion": "POM.ROS.S/G 600X6",
+            "cantidad": "84441.6518",
+            "precio_unitario": "5363.2300",
+            "subtotal": "452880000.00",
+            "unidad_medida": "CJ",
+            "order": 8
+        },
+        {
+            "id": 872,
+            "codigo": "100222",
+            "descripcion": "CEPITA MANZ.200X6 TETRA LEAF",
+            "cantidad": "1.0000",
+            "precio_unitario": "4261.5000",
+            "subtotal": "4261.50",
+            "unidad_medida": "CJ",
+            "order": 9
+        },
+        {
+            "id": 873,
+            "codigo": "100224",
+            "descripcion": "CEPITA M.FR.200X6 TETRA LEAF",
+            "cantidad": "1.0000",
+            "precio_unitario": "3107.0200",
+            "subtotal": "3107.02",
+            "unidad_medida": "CJ",
+            "order": 10
+        }
+    ],
+    "error_message": null
+}

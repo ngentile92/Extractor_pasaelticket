@@ -1,12 +1,13 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import InvoiceViewSet
 from .views_batch import InvoiceBatchViewSet
 from .views_gemini import InvoiceGeminiViewSet
 
 router = DefaultRouter()
-router.register(r'invoices', InvoiceViewSet, basename='invoice')
+# Endpoint principal: Gemini
 router.register(r'invoices-gemini', InvoiceGeminiViewSet, basename='invoice-gemini')
+# Alias para compatibilidad (apunta al mismo ViewSet de Gemini)
+router.register(r'invoices', InvoiceGeminiViewSet, basename='invoice')
 
 urlpatterns = [
     path('', include(router.urls)),

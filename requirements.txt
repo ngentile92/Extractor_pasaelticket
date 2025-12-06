@@ -1,32 +1,54 @@
+# =============================================================================
 # Django Framework
+# =============================================================================
 Django>=5.2.0,<6.0.0
 djangorestframework>=3.16.0,<4.0.0
+django-cors-headers>=4.0.0
 
-# LlamaCloud Services - LlamaExtract for structured extraction
-llama-cloud-services>=0.1.0
+# =============================================================================
+# Database (Railway PostgreSQL)
+# =============================================================================
+psycopg2-binary>=2.9.0
+dj-database-url>=2.0.0
 
-# Llamaindex for document processing (keeping for potential future use)
-llama-index>=0.13.0
-llama-index-core>=0.13.0
-llama-index-readers-file>=0.4.0
+# =============================================================================
+# Static Files (Railway)
+# =============================================================================
+whitenoise>=6.6.0
 
-# Document processing support
+# =============================================================================
+# Google Gemini AI
+# =============================================================================
+google-genai>=0.8.0
+
+# =============================================================================
+# Document & Image Processing
+# =============================================================================
 pypdf>=3.0.0
 python-docx>=1.0.0
 pillow>=10.3.0
+opencv-python-headless>=4.8.0  # headless para servidores sin GUI
 
-# API and utilities
-python-multipart>=0.0.18
+# =============================================================================
+# Data Validation & API
+# =============================================================================
 pydantic>=2.0.0
+python-multipart>=0.0.18
 
-# Environment management
+# =============================================================================
+# Environment & Utils
+# =============================================================================
 python-dotenv>=1.0.0
 
-# Google GenAI for intelligent re-extraction
-google-genai>=0.8.0
+# =============================================================================
+# Production Server
+# =============================================================================
+gunicorn>=21.0.0
 
-# Database
-psycopg2-binary>=2.9.0
-
-# CORS support
-django-cors-headers>=4.0.0
+# =============================================================================
+# LEGACY - LlamaCloud (no usado actualmente)
+# =============================================================================
+# llama-cloud-services>=0.1.0
+# llama-index>=0.13.0
+# llama-index-core>=0.13.0
+# llama-index-readers-file>=0.4.0

@@ -579,12 +579,93 @@ def normalize_parte(parte: Dict[str, Any], is_empresa: bool = False) -> Dict[str
     return normalized
 
 
+def normalize_alicuota_iva(alicuota_key: str, monto: float) -> tuple[str, float]:
+    """
+    🔧 Corregir alícuotas IVA mal extraídas por OCR
+    
+    Las alícuotas válidas en Argentina son: 0, 2.5, 5, 10.5, 21, 27
+    El OCR suele confundir los decimales y multiplicar/dividir por 10.
+    
+    Args:
+        alicuota_key: Key de la alícuota (puede estar incorrecta, ej: "105", "25", "50")
+        monto: Monto del IVA extraído
+    
+    Returns:
+        Tuple (alicuota_correcta, monto) donde alicuota_correcta es la key corregida
+    
+    Examples:
+        >>> normalize_alicuota_iva("105", 100.0)
+        ("105", 100.0)  # 10.5% es correcto
+        >>> normalize_alicuota_iva("1050", 100.0)
+        ("105", 100.0)  # 1050% → 10.5%
+        >>> normalize_alicuota_iva("25", 100.0)
+        ("25", 100.0)   # 2.5% es correcto
+        >>> normalize_alicuota_iva("250", 100.0)
+        ("25", 100.0)   # 250% → 2.5%
+    """
+    # Alícuotas válidas en Argentina (como strings de keys)
+    VALID_ALICUOTAS = {"0", "25", "5", "105", "21", "27"}
+    
+    # Si ya es válida, retornar sin cambios
+    if alicuota_key in VALID_ALICUOTAS:
+        return alicuota_key, monto
+    
+    # Mapeo de errores comunes
+    ERROR_MAPPINGS = {
+        # Multiplicados por 10
+        "210": "21",    # 210% → 21%
+        "270": "27",    # 270% → 27%
+        "1050": "105",  # 1050% → 10.5%
+        "250": "25",    # 250% → 2.5%
+        "50": "5",      # 50% → 5%
+        
+        # Divididos por 10 (menos común)
+        "2": "21",      # 2% → 21% (si el monto es coherente)
+        "1": "105",     # 1% → 10.5% (si el monto es coherente)
+        
+        # Otros errores comunes
+        "10": "105",    # 10% → 10.5%
+        "11": "105",    # 11% → 10.5%
+        "3": "27",      # 3% → 27%
+    }
+    
+    corrected_key = ERROR_MAPPINGS.get(alicuota_key, alicuota_key)
+    
+    # Si no encontramos el mapeo, intentar detectar la alícuota correcta
+    # analizando el monto en relación al subtotal (esto se puede mejorar)
+    if corrected_key not in VALID_ALICUOTAS:
+        # Intentar dividir/multiplicar por 10
+        try:
+            numeric_key = float(alicuota_key.replace(",", "."))
+            
+            # Si es > 100, probablemente está multiplicado por 10
+            if numeric_key > 100:
+                # Dividir por 10
+                corrected_numeric = numeric_key / 10
+                # Redondear a alícuotas válidas
+                if abs(corrected_numeric - 10.5) < 1:
+                    corrected_key = "105"
+                elif abs(corrected_numeric - 21) < 1:
+                    corrected_key = "21"
+                elif abs(corrected_numeric - 27) < 1:
+                    corrected_key = "27"
+                elif abs(corrected_numeric - 2.5) < 0.5:
+                    corrected_key = "25"
+                elif abs(corrected_numeric - 5) < 0.5:
+                    corrected_key = "5"
+        except (ValueError, AttributeError):
+            pass
+    
+    return corrected_key, monto
+
+
 def normalize_fiscalidad(fiscalidad: Dict[str, Any]) -> Dict[str, Any]:
     """
     🧮 Normalizar estructura de fiscalidad
     
     Convierte formato plano de IVA (iva_21, iva_105, etc.) al formato
     nativo legacy (iva: {"21": valor, "105": valor}).
+    También corrige alícuotas IVA mal extraídas por OCR.
     
     Args:
         fiscalidad: Diccionario de fiscalidad
@@ -616,6 +697,18 @@ def normalize_fiscalidad(fiscalidad: Dict[str, Any]) -> Dict[str, Any]:
         # Si ya existe formato dict, usarlo
         if "iva" in impuestos and isinstance(impuestos["iva"], dict):
             iva_dict = impuestos["iva"].copy()
+            # Corregir alícuotas incorrectas en el dict existente
+            corrected_iva_dict = {}
+            for key, value in iva_dict.items():
+                try:
+                    float_value = float(value) if value is not None else 0.0
+                    if float_value > 0:
+                        # Corregir la alícuota
+                        corrected_key, corrected_value = normalize_alicuota_iva(str(key), float_value)
+                        corrected_iva_dict[corrected_key] = corrected_value
+                except (ValueError, TypeError):
+                    pass
+            iva_dict = corrected_iva_dict
         else:
             # Convertir desde formato plano
             for flat_key, rate_key in iva_mappings.items():
@@ -624,7 +717,9 @@ def normalize_fiscalidad(fiscalidad: Dict[str, Any]) -> Dict[str, Any]:
                     try:
                         float_value = float(value) if value is not None else 0.0
                         if float_value > 0:
-                            iva_dict[rate_key] = float_value
+                            # Corregir la alícuota antes de agregarla
+                            corrected_key, corrected_value = normalize_alicuota_iva(rate_key, float_value)
+                            iva_dict[corrected_key] = corrected_value
                     except (ValueError, TypeError):
                         # Si no se puede convertir, ignorar
                         pass

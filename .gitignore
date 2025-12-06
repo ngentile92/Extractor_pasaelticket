@@ -220,3 +220,6 @@ __marimo__/
 factura-json-apikeys.json
 *apikeys.json
 
+.DS_Store
+
+.cursorignore

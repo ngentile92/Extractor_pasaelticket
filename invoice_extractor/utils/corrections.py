@@ -34,13 +34,17 @@ def apply_cuit_auto_correction(data: Dict[str, Any]) -> Dict[str, Any]:
     🔧 Auto-corrección de CUITs con dígito verificador incorrecto
     
     Si un CUIT tiene formato válido pero dígito verificador incorrecto,
-    lo corrige automáticamente y agrega un warning para revisión.
+    genera un warning para revisión pero NO modifica el valor original.
+    
+    ⚠️ NOTA: La auto-corrección fue DESHABILITADA porque empeoraba los resultados.
+    El OCR puede extraer mal un dígito, pero el auto-corrector calculaba un CUIT
+    diferente al real del documento.
     
     Args:
         data: Diccionario con datos del comprobante
     
     Returns:
-        Datos corregidos con warnings agregados
+        Datos con warnings agregados (sin modificar CUITs)
     """
     if "partes" not in data:
         return data
@@ -48,35 +52,31 @@ def apply_cuit_auto_correction(data: Dict[str, Any]) -> Dict[str, Any]:
     partes = data["partes"]
     warnings_added = []
     
-    # Corregir CUIT de empresa
+    # Validar CUIT de empresa (SIN CORREGIR)
     if "empresa" in partes and partes["empresa"]:
         empresa_cuit = partes["empresa"].get("cuit")
         if empresa_cuit:
             validation = CUITValidator.validate_complete(empresa_cuit)
             
-            # Si formato válido pero verificador incorrecto, auto-corregir
-            if validation['format_valid'] and not validation['verifier_valid'] and validation['can_auto_fix']:
+            # Si formato válido pero verificador incorrecto, solo advertir
+            if validation['format_valid'] and not validation['verifier_valid']:
                 cuit_original = validation['cuit_original']
-                cuit_corregido = validation['suggested_cuit']
-                
-                partes["empresa"]["cuit"] = cuit_corregido
-                warning_msg = f"⚠️ CUIT empresa auto-corregido: '{cuit_original}' → '{cuit_corregido}' (dígito verificador incorrecto - REVISAR en documento original)"
+                # NO modificamos el CUIT - solo advertimos
+                warning_msg = f"⚠️ CUIT empresa posiblemente incorrecto: '{cuit_original}' (dígito verificador no válido - VERIFICAR en documento original)"
                 warnings_added.append(warning_msg)
                 logger.warning(warning_msg)
     
-    # Corregir CUIT de cliente
+    # Validar CUIT de cliente (SIN CORREGIR)
     if "cliente" in partes and partes["cliente"]:
         cliente_cuit = partes["cliente"].get("cuit")
         if cliente_cuit:
             validation = CUITValidator.validate_complete(cliente_cuit)
             
-            # Si formato válido pero verificador incorrecto, auto-corregir
-            if validation['format_valid'] and not validation['verifier_valid'] and validation['can_auto_fix']:
+            # Si formato válido pero verificador incorrecto, solo advertir
+            if validation['format_valid'] and not validation['verifier_valid']:
                 cuit_original = validation['cuit_original']
-                cuit_corregido = validation['suggested_cuit']
-                
-                partes["cliente"]["cuit"] = cuit_corregido
-                warning_msg = f"⚠️ CUIT cliente auto-corregido: '{cuit_original}' → '{cuit_corregido}' (dígito verificador incorrecto - REVISAR en documento original)"
+                # NO modificamos el CUIT - solo advertimos
+                warning_msg = f"⚠️ CUIT cliente posiblemente incorrecto: '{cuit_original}' (dígito verificador no válido - VERIFICAR en documento original)"
                 warnings_added.append(warning_msg)
                 logger.warning(warning_msg)
     

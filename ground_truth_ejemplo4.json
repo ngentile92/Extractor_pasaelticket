@@ -1,0 +1,267 @@
+{
+  "archivo_original": "Ejemplo4.jpeg",
+  "factura": {
+    "items": [
+      {
+        "codigo": "13186",
+        "descripcion": "ALCAPARRAS VINAG C/PONTE 830G",
+        "cantidad": 1.0,
+        "unidad_medida": null,
+        "precio_unitario": 11208.1,
+        "subtotal": 11208.1,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 2353.7,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      },
+      {
+        "codigo": "14683",
+        "descripcion": "SALSA SOJA BARONESE 5LT",
+        "cantidad": 3.0,
+        "unidad_medida": null,
+        "precio_unitario": 12480.55,
+        "subtotal": 37441.65,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 7862.75,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      },
+      {
+        "codigo": "23847",
+        "descripcion": "ACEITE OLIVA V 5LT ULLUM",
+        "cantidad": 2.0,
+        "unidad_medida": null,
+        "precio_unitario": 20269.95,
+        "subtotal": 40539.9,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 8513.38,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      },
+      {
+        "codigo": "19164",
+        "descripcion": "ARROZ CARNAROLI GALLO 5KG",
+        "cantidad": 1.0,
+        "unidad_medida": null,
+        "precio_unitario": 16289.4,
+        "subtotal": 16289.4,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 3420.77,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      },
+      {
+        "codigo": "7324",
+        "descripcion": "ARROZ GALLO ORO 5KG",
+        "cantidad": 2.0,
+        "unidad_medida": null,
+        "precio_unitario": 6225.4,
+        "subtotal": 12450.8,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 2614.67,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      },
+      {
+        "codigo": "1470",
+        "descripcion": "LECHE ENTE LV ILOLAY 1LT",
+        "cantidad": 12.0,
+        "unidad_medida": null,
+        "precio_unitario": 1249.5,
+        "subtotal": 14994.0,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 3148.74,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      },
+      {
+        "codigo": "20239",
+        "descripcion": "ACEITE GIRA AO 5LT CAÑUELAS",
+        "cantidad": 12.0,
+        "unidad_medida": null,
+        "precio_unitario": 17203.15,
+        "subtotal": 206437.8,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 43351.94,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      },
+      {
+        "codigo": "42992",
+        "descripcion": "CREM-LECH 44% MILKAUT 5LT BAL",
+        "cantidad": 1.0,
+        "unidad_medida": null,
+        "precio_unitario": 35543.2,
+        "subtotal": 35543.2,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 7464.07,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      },
+      {
+        "codigo": "37395",
+        "descripcion": "CREM-LECH 39% MILKAUT 5LT",
+        "cantidad": 3.0,
+        "unidad_medida": null,
+        "precio_unitario": 31785.75,
+        "subtotal": 95357.25,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 20025.02,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      },
+      {
+        "codigo": "1323",
+        "descripcion": "TAPA SUPER HORN MENDIA 520GR",
+        "cantidad": 6.0,
+        "unidad_medida": null,
+        "precio_unitario": 1124.55,
+        "subtotal": 6747.3,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 1416.93,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      },
+      {
+        "codigo": "24837",
+        "descripcion": "PROVOLETA SANTA ROSA 5",
+        "cantidad": 19.6,
+        "unidad_medida": null,
+        "precio_unitario": 21111.45,
+        "subtotal": 413784.42,
+        "descuento_item": null,
+        "subtotal_neto": null,
+        "iva_tasa": 21.0,
+        "iva_item": 86894.73,
+        "impuestos_internos_item": null,
+        "otros_impuestos_item": null,
+        "subtotal_con_impuestos": null
+      }
+    ],
+    "partes": {
+      "cliente": {
+        "apellido_nombre_razon_social": "BLUE NIGHT SRL",
+        "cuit": "33-71677240-9",
+        "condicion_iva": "RESPONSABLE INSCRIPTO",
+        "domicilio": "MORENO JOSE MARIA AV. 275 Piso SECTOR: 8 / 485771 DIR.COMERCIAL: AV COSTANERA RAFAEL OBLIGADO 6600",
+        "domicilio_calle": "MORENO JOSE MARIA AV. 275 Piso SECTOR: 8 / 485771",
+        "domicilio_localidad": "CAPITAL FEDERAL",
+        "provincia": null
+      },
+      "empresa": {
+        "razon_social": "El Emporio de Lanús S.A.",
+        "cuit": "33-70715731-9",
+        "condicion_iva": "RESPONSABLE INSCRIPTO",
+        "ingresos_brutos": "902-618019-0",
+        "domicilio_comercial": "Sitio de Montevideo 2035/37 B1824KDW Lanús Este - Prov. de Buenos Aires",
+        "domicilio_calle": "Sitio de Montevideo 2035/37",
+        "domicilio_localidad": "Lanús Este",
+        "domicilio_codigo_postal": "B1824KDW",
+        "provincia": "Buenos Aires",
+        "fecha_inicio_actividades": "05/2000"
+      }
+    },
+    "documento": {
+      "tipo_comprobante": "FACTURA A",
+      "codigo": "001",
+      "numero_comprobante": "00010-00665092",
+      "punto_venta": "00010",
+      "fecha_emision": "22/09/2025",
+      "cae": "75389042666725",
+      "fecha_vencimiento_cae": "02/10/2025",
+      "moneda": "ARS",
+      "condicion_venta": "CUENTA CORRIENTE",
+      "fecha_vencimiento_pago": null,
+      "numero_remito": null,
+      "numero_orden_compra": null,
+      "observaciones": "DEPOSITO EN CTA, 20 DIAS F.F. SI EL PAGO EXCEDE LA CONDICION SE EMITIRA NOTA DE DEBITO POR MORA DIARIA DEL 6% MENSUAL"
+    },
+    "fiscalidad": {
+      "totales": {
+        "subtotal_gravado": 891793.82,
+        "importe_total": 1105824.33,
+        "subtotal_bruto": null,
+        "descuentos": 0.0,
+        "subtotal_exento": null,
+        "subtotal_no_gravado": null,
+        "subtotal_con_iva": null,
+        "total_iva": 187276.7,
+        "total_impuestos_internos": null,
+        "total_otros_tributos": 26753.81
+      },
+      "calculos": {
+        "items_count": 11,
+        "items_subtotal_total": 890793.32,
+        "total_iva_calculado": 187276.7,
+        "total_percepciones_calculado": 26753.81,
+        "total_retenciones_calculado": null,
+        "diferencia_matematica": 0.0
+      },
+      "impuestos": {
+        "iva": {
+          "21": 187276.7
+        },
+        "percepcion_iva": 0.0,
+        "percepcion_iibb": [
+          {
+            "provincia": "caba",
+            "monto": 26753.81
+          }
+        ],
+        "percepcion_ganancias": 0.0,
+        "retencion_iva": null,
+        "retenciones_iibb": [],
+        "retencion_ganancias": null,
+        "retencion_suss": null,
+        "impuestos_internos": 0.0,
+        "icl_idc": 0.0,
+        "otras_retenciones": null
+      }
+    }
+  },
+  "metadata": {
+    "extraction_time": 36.102945,
+    "schema_type": "completo",
+    "extractor": "gemini-2.5-flash",
+    "file_name": "Ejemplo4.jpeg",
+    "multi_image_used": false,
+    "smart_crops_used": false,
+    "image_variants_count": 1
+  },
+  "_revisar": [
+    "Verificar CUITs (emisor y cliente)",
+    "Verificar cantidades de items",
+    "Verificar totales",
+    "Verificar fecha de emisión"
+  ]
+}
