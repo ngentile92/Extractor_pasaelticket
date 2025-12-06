@@ -3,6 +3,7 @@
 📋 Schemas - Definiciones de datos para facturas argentinas
 
 Schemas únicos y consolidados para toda la aplicación.
+Evita duplicación de definiciones en diferentes módulos.
 
 Uso:
     from invoice_extractor.core.schemas import (
@@ -42,7 +43,18 @@ from .invoice import (
     SchemaComposer,
 )
 
+# Re-exportar con nombres alternativos para compatibilidad
+ComprobanteArgentino = InvoiceComplete
+ComprobanteSimplificado = InvoiceSimplificado
+Partes = InvoicePartes
+Documento = InvoiceDocumento
+Fiscalidad = InvoiceFiscalidad
+Totales = InvoiceTotales
+Calculos = InvoiceCalculos
+Impuestos = InvoiceImpuestos
+
 __all__ = [
+    # Nombres nuevos (preferidos)
     'InvoiceItem',
     'Cliente',
     'Empresa',
@@ -56,4 +68,15 @@ __all__ = [
     'InvoiceComplete',
     'InvoiceSimplificado',
     'SchemaComposer',
+    
+    # Nombres legacy (para compatibilidad)
+    'ComprobanteArgentino',
+    'ComprobanteSimplificado',
+    'Partes',
+    'Documento',
+    'Fiscalidad',
+    'Totales',
+    'Calculos',
+    'Impuestos',
 ]
+

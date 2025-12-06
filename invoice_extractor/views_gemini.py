@@ -237,33 +237,105 @@ class InvoiceGeminiViewSet(viewsets.ViewSet):
         extraction_metadata: dict, retry_metadata: dict,
         extraction_time: float
     ) -> dict:
-        """Construir respuesta en formato legacy."""
+        """
+        Construir respuesta limpia con estructura estándar.
+        
+        Estructura principal:
+        - items: lista de productos/servicios
+        - partes: empresa y cliente
+        - documento: datos del comprobante
+        - fiscalidad: totales, calculos, impuestos
+        
+        Campos adicionales (opcionales):
+        - _alertas: errores y warnings concisos
+        - _meta: metadata de extracción
+        """
+        # Estructura base limpia
         response = {
-            **processed_data,
-            'metadata': {
-                'validation': {
-                    'validation_score': validation_result.get('validation_score', 0.0),
-                    'confidence_level': validation_result.get('confidence_level', 'unknown'),
-                    'has_validation_errors': validation_result.get('has_validation_errors', False),
-                    'requires_review': validation_result.get('requires_review', False),
-                    'errors_count': len(validation_result.get('errors', [])),
-                    'warnings_count': len(validation_result.get('warnings', [])),
-                },
-                'extraction': {
-                    'extraction_time': extraction_time,
-                    'extraction_method': 'gemini-2.5-flash',
-                    'schema_type': extraction_metadata.get('schema_type', 'completo'),
-                }
-            }
+            'items': processed_data.get('items', []),
+            'partes': processed_data.get('partes', {}),
+            'documento': processed_data.get('documento', {}),
+            'fiscalidad': self._clean_fiscalidad(processed_data.get('fiscalidad', {})),
         }
         
-        if retry_metadata.get('was_retried'):
-            response['metadata']['gemini_retry'] = retry_metadata
+        # Alertas concisas
+        alertas = self._build_alertas(processed_data, validation_result)
+        if alertas['errores'] or alertas['warnings']:
+            response['_alertas'] = alertas
         
-        if 'orchestration' in extraction_metadata:
-            response['metadata']['orchestration'] = extraction_metadata['orchestration']
+        # Metadata compacta
+        response['_meta'] = {
+            'score': round(validation_result.get('validation_score', 0.0), 2),
+            'confianza': validation_result.get('confidence_level', 'unknown'),
+            'tiempo_seg': round(extraction_time, 1),
+            'requiere_revision': validation_result.get('requires_review', False),
+        }
         
         return response
+    
+    def _clean_fiscalidad(self, fiscalidad: dict) -> dict:
+        """Limpiar fiscalidad removiendo campos verbose."""
+        if not fiscalidad:
+            return {}
+        
+        result = {
+            'totales': fiscalidad.get('totales', {}),
+            'impuestos': fiscalidad.get('impuestos', {}),
+        }
+        
+        # Calculos simplificados (sin inference_log verbose)
+        calculos = fiscalidad.get('calculos', {})
+        if calculos:
+            result['calculos'] = {
+                'items_count': calculos.get('items_count'),
+                'items_subtotal_total': calculos.get('items_subtotal_total'),
+                'total_iva_calculado': calculos.get('total_iva_calculado'),
+                'total_percepciones_calculado': calculos.get('total_percepciones_calculado'),
+                'total_retenciones_calculado': calculos.get('total_retenciones_calculado'),
+                'diferencia_matematica': calculos.get('diferencia_matematica'),
+            }
+        
+        return result
+    
+    def _build_alertas(self, processed_data: dict, validation_result: dict) -> dict:
+        """Construir alertas concisas."""
+        errores = []
+        warnings = []
+        
+        # Extraer warnings de corrección (CUITs, etc.)
+        correction_warnings = processed_data.get('_correction_warnings', [])
+        for w in correction_warnings:
+            # Hacer mensaje más conciso
+            if 'CUIT' in w and 'posiblemente incorrecto' in w:
+                # Extraer solo el CUIT
+                import re
+                match = re.search(r"'(\d{2}-\d{8}-\d)'", w)
+                if match:
+                    warnings.append(f"CUIT inválido: {match.group(1)}")
+                else:
+                    warnings.append("CUIT inválido detectado")
+            else:
+                # Truncar mensajes largos
+                warnings.append(w[:80] + '...' if len(w) > 80 else w)
+        
+        # Errores de validación
+        for err in validation_result.get('errors', []):
+            if isinstance(err, dict):
+                errores.append(err.get('mensaje', str(err))[:80])
+            else:
+                errores.append(str(err)[:80])
+        
+        # Warnings de validación
+        for warn in validation_result.get('warnings', []):
+            if isinstance(warn, dict):
+                warnings.append(warn.get('mensaje', str(warn))[:80])
+            elif warn not in warnings:
+                warnings.append(str(warn)[:80])
+        
+        return {
+            'errores': errores,
+            'warnings': warnings,
+        }
     
     def _save_to_database(
         self, invoice, extracted: dict, processed_data: dict,
