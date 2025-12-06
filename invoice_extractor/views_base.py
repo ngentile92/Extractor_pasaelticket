@@ -136,7 +136,6 @@ def apply_post_processing(
     # Crear procesador
     processor = InvoicePostProcessor(
         use_master_validator=True,
-        enable_gemini_retry=enable_retry,
         enable_fiscal_inference=True
     )
     

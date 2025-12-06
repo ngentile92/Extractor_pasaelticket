@@ -187,8 +187,7 @@ class InvoiceGeminiViewSet(viewsets.ViewSet):
         from .utils.post_processor import InvoicePostProcessor
         
         processor = InvoicePostProcessor(
-            use_master_validator=True,
-            enable_gemini_retry=False  # Ya es Gemini
+            use_master_validator=True
         )
         
         result = processor.process(extracted)
@@ -229,7 +228,7 @@ class InvoiceGeminiViewSet(viewsets.ViewSet):
         
         # Devolver datos originales si retry no mejoró
         from .utils.post_processor import InvoicePostProcessor
-        processor = InvoicePostProcessor(use_master_validator=True, enable_gemini_retry=False)
+        processor = InvoicePostProcessor(use_master_validator=True)
         result = processor.process(original_data)
         return result['processed_data'], result['validation_result'], retry_metadata
     
